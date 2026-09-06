@@ -1,8 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { BookOpen, PlayCircle, Flame, Trophy, CheckCircle2 } from "lucide-react";
+import { BookOpen, Flame, Trophy, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { calculateStreakDays, getAchievements } from "@/lib/gamification";
+import { GamificationWidget } from "@/components/dashboard/GamificationWidget";
+import { StudentCourseList, type StudentCourseItem } from "@/components/dashboard/StudentCourseList";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +56,29 @@ export default async function StudentHomePage() {
     { icon: Trophy, value: quizzesPassed, label: "اختبار ناجح" },
   ];
 
+  const streakDays = calculateStreakDays(completedProgress.map((p) => p.updatedAt));
+  const achievements = getAchievements(completedProgress.length, quizzesPassed, streakDays);
+
+  const courses: StudentCourseItem[] = enrollments.map((enrollment) => {
+    const lessons = enrollment.course.modules.flatMap((module) => module.lessons);
+    const completedCount = lessons.filter((lesson) => completedLessonIds.has(lesson.id)).length;
+    const percent = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+
+    const nextLesson = lessons.find((lesson) => !completedLessonIds.has(lesson.id)) ?? lessons[0];
+    const continueHref = nextLesson
+      ? `/dashboard/student/courses/${enrollment.course.slug}/${nextLesson.id}`
+      : null;
+
+    return {
+      id: enrollment.id,
+      title: enrollment.course.title,
+      percent,
+      completedCount,
+      totalLessons: lessons.length,
+      continueHref,
+    };
+  });
+
   return (
     <div className="animate-fade-in p-6 md:p-8">
       <h1 className="text-2xl font-extrabold text-white">
@@ -61,18 +87,22 @@ export default async function StudentHomePage() {
       <p className="mt-2 text-slate-400">تابع كورساتك وأكمل رحلتك في إدارة الأعمال.</p>
 
       {enrollments.length > 0 && (
-        <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-md">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="flex flex-col items-center gap-1 rounded-control border border-white/10 bg-navy-900/60 p-4 text-center shadow-card"
-            >
-              <stat.icon size={18} className="text-gold-400" />
-              <p className="text-xl font-extrabold text-white">{stat.value}</p>
-              <p className="text-[11px] text-slate-400">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-md">
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="flex flex-col items-center gap-1 rounded-control border border-white/10 bg-navy-900/60 p-4 text-center shadow-card"
+              >
+                <stat.icon size={18} className="text-gold-400" />
+                <p className="text-xl font-extrabold text-white">{stat.value}</p>
+                <p className="text-[11px] text-slate-400">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <GamificationWidget streakDays={streakDays} achievements={achievements} />
+        </>
       )}
 
       <h2 className="mt-8 mb-4 text-lg font-bold text-white">كورساتي</h2>
@@ -90,55 +120,7 @@ export default async function StudentHomePage() {
           </Link>
         </div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {enrollments.map((enrollment) => {
-            const lessons = enrollment.course.modules.flatMap((module) => module.lessons);
-            const completedCount = lessons.filter((lesson) =>
-              completedLessonIds.has(lesson.id)
-            ).length;
-            const percent = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
-
-            const nextLesson =
-              lessons.find((lesson) => !completedLessonIds.has(lesson.id)) ?? lessons[0];
-            const continueHref = nextLesson
-              ? `/dashboard/student/courses/${enrollment.course.slug}/${nextLesson.id}`
-              : null;
-
-            return (
-              <li
-                key={enrollment.id}
-                className="rounded-card border border-white/10 bg-navy-900/60 p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-gold-400/30 hover:shadow-elevated"
-              >
-                <h3 className="font-bold text-white">{enrollment.course.title}</h3>
-
-                <div className="mt-4">
-                  <div className="mb-1.5 flex items-center justify-between text-xs text-slate-400">
-                    <span>{percent}% مكتمل</span>
-                    <span>
-                      {completedCount} / {lessons.length} درس
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-gold-400 transition-all duration-700"
-                      style={{ width: `${percent}%` }}
-                    />
-                  </div>
-                </div>
-
-                {continueHref && (
-                  <Link
-                    href={continueHref}
-                    className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-gold-400 py-2.5 text-sm font-bold text-navy-950 transition hover:bg-gold-300"
-                  >
-                    <PlayCircle size={16} />
-                    متابعة التعلم
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <StudentCourseList courses={courses} />
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full antialiased`}>
+    <html lang="ar" dir="rtl" className={cn("h-full", "antialiased", "font-sans", cairo.variable)}>
       <body className={`${cairo.className} flex min-h-screen flex-col`}>
         <Providers>{children}</Providers>
       </body>
