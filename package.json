@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "admin:recover": "tsx scripts/admin-recovery.ts",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
