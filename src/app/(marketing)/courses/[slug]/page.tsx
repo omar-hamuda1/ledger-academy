@@ -72,7 +72,7 @@ export default async function CourseDetailPage({
               <ul className="space-y-2">
                 {module.lessons.map((lesson) => (
                   <li key={lesson.id} className="flex items-center gap-2 text-sm text-slate-300">
-                    <PlayCircle size={16} className="shrink-0 text-slate-500" />
+                    <PlayCircle size={16} className="shrink-0 text-slate-400" />
                     {lesson.title}
                   </li>
                 ))}

@@ -36,7 +36,7 @@ export default async function AdminProgressPage({
       </p>
 
       {students.length === 0 ? (
-        <p className="mt-8 text-slate-500">لا يوجد طلاب مسجلون بعد.</p>
+        <p className="mt-8 text-slate-400">لا يوجد طلاب مسجلون بعد.</p>
       ) : (
         <div className="mt-8 overflow-x-auto rounded-card border border-white/10 bg-navy-900/60 shadow-card">
           <table className="w-full text-right text-sm">

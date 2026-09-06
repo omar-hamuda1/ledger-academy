@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { createLessonSchema } from "@/lib/validators/lesson";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req: Request) {
   const admin = await requireAdmin();
@@ -32,6 +33,15 @@ export async function POST(req: Request) {
       videoUrl: videoUrl || null,
       order: (_max.order ?? 0) + 1,
     },
+  });
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email ?? "unknown",
+    action: "lesson.create",
+    targetType: "Lesson",
+    targetId: lesson.id,
+    metadata: { title: lesson.title, moduleId },
   });
 
   return NextResponse.json({ lesson }, { status: 201 });

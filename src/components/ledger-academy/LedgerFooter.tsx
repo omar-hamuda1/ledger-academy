@@ -68,7 +68,7 @@ export function LedgerFooter() {
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-3 border-t border-white/10 py-6 text-center text-sm text-slate-500 sm:flex-row sm:justify-between sm:px-6">
+      <div className="flex flex-col items-center gap-3 border-t border-white/10 py-6 text-center text-sm text-slate-400 sm:flex-row sm:justify-between sm:px-6">
         <span>© {new Date().getFullYear()} Ledger Academy. جميع الحقوق محفوظة.</span>
         <div className="flex items-center gap-4">
           <a href="/privacy" className="transition hover:text-gold-400">

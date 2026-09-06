@@ -159,7 +159,7 @@ export default async function LandingPage() {
           <div className="relative mx-auto w-full max-w-sm">
             <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-blue-500/20 via-gold-400/10 to-transparent blur-2xl" />
             <div className="relative flex aspect-square items-center justify-center rounded-3xl border border-white/10 bg-gradient-to-b from-slate-800 to-navy-900">
-              <User size={96} className="text-slate-500" />
+              <User size={96} className="text-slate-400" />
             </div>
           </div>
 

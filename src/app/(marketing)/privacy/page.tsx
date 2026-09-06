@@ -17,7 +17,7 @@ export default async function PrivacyPolicyPage() {
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
         <h1 className="mb-2 text-3xl font-extrabold text-white">سياسة الخصوصية</h1>
-        <p className="mb-8 text-sm text-slate-500">آخر تحديث: سبتمبر 2026</p>
+        <p className="mb-8 text-sm text-slate-400">آخر تحديث: سبتمبر 2026</p>
 
         <div className="mb-10 flex gap-3 rounded-card border border-gold-400/30 bg-gold-400/10 p-4 text-sm text-gold-300">
           <ShieldAlert size={20} className="mt-0.5 shrink-0" />

@@ -8,7 +8,7 @@ const MAX_ATTEMPTS = 5;
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  if (!checkRateLimit(`otp-verify-ip:${ip}`, 20, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`otp-verify-ip:${ip}`, 20, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "محاولات كثيرة جدًا، حاول لاحقًا." }, { status: 429 });
   }
 

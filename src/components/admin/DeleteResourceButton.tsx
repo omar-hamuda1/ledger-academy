@@ -22,7 +22,7 @@ export function DeleteResourceButton({ resourceId }: { resourceId: string }) {
       onClick={handleDelete}
       disabled={loading}
       aria-label="حذف الملف"
-      className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-60"
+      className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-60"
     >
       <Trash2 size={14} />
     </button>

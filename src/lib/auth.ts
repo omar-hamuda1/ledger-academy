@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         const rateLimitKey = `login:${credentials.email.toLowerCase()}`;
-        if (!checkRateLimit(rateLimitKey, 5, 5 * 60 * 1000)) {
+        if (!(await checkRateLimit(rateLimitKey, 5, 5 * 60 * 1000))) {
           throw new Error("محاولات تسجيل دخول كثيرة جدًا، حاول لاحقًا.");
         }
 

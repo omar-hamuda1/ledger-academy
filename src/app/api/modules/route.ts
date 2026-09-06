@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { createModuleSchema } from "@/lib/validators/module";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req: Request) {
   const admin = await requireAdmin();
@@ -31,6 +32,15 @@ export async function POST(req: Request) {
       title,
       order: (_max.order ?? 0) + 1,
     },
+  });
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email ?? "unknown",
+    action: "module.create",
+    targetType: "Module",
+    targetId: module_.id,
+    metadata: { title: module_.title, courseId },
   });
 
   return NextResponse.json({ module: module_ }, { status: 201 });

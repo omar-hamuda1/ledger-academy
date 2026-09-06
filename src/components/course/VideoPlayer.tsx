@@ -5,7 +5,7 @@ const DIRECT_VIDEO_EXTENSIONS = [".mp4", ".webm", ".ogg"];
 export function VideoPlayer({ videoUrl }: { videoUrl: string | null }) {
   if (!videoUrl) {
     return (
-      <div className="mt-4 flex aspect-video items-center justify-center rounded-card border border-white/10 bg-navy-900/60 text-slate-500">
+      <div className="mt-4 flex aspect-video items-center justify-center rounded-card border border-white/10 bg-navy-900/60 text-slate-400">
         لا يوجد فيديو لهذا الدرس بعد.
       </div>
     );

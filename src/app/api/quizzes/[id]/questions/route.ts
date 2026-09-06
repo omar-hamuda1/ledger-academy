@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { createQuestionSchema } from "@/lib/validators/quiz";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -24,6 +25,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       options: parsed.data.options,
       correctId: parsed.data.correctId,
     },
+  });
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email ?? "unknown",
+    action: "question.create",
+    targetType: "Question",
+    targetId: question.id,
+    metadata: { quizId, text: parsed.data.text },
   });
 
   return NextResponse.json({ question }, { status: 201 });

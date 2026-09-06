@@ -16,6 +16,7 @@ import {
   Calculator,
   Banknote,
   Settings,
+  History,
 } from "lucide-react";
 import { SignOutButton } from "./SignOutButton";
 
@@ -29,6 +30,7 @@ const navConfig = {
       { href: "/dashboard/admin/progress", label: "تقدم الطلاب", icon: TrendingUp },
       { href: "/dashboard/admin/users", label: "الطلاب والمستخدمون", icon: Users },
       { href: "/dashboard/admin/settings", label: "الإعدادات العامة", icon: Settings },
+      { href: "/dashboard/admin/audit", label: "سجل النشاط", icon: History },
     ],
   },
   student: {
@@ -65,7 +67,7 @@ export function DashboardShell({
         </span>
       </Link>
 
-      <p className="px-6 pb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <p className="px-6 pb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
         {roleLabel}
       </p>
 

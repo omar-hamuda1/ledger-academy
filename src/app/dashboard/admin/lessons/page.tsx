@@ -51,14 +51,14 @@ export default async function AdminLessonsPage() {
                         className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-white/5"
                       >
                         <span className="flex items-center gap-2 text-sm text-slate-200">
-                          <PlayCircle size={15} className="shrink-0 text-slate-500" />
+                          <PlayCircle size={15} className="shrink-0 text-slate-400" />
                           {lesson.title}
                         </span>
                         <span className="flex items-center gap-1">
                           <Link
                             href={`/dashboard/admin/lessons/${lesson.id}`}
                             aria-label="تعديل الدرس"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/10 hover:text-gold-400"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-gold-400"
                           >
                             <Pencil size={15} />
                           </Link>

@@ -62,12 +62,12 @@ export default async function AdminCoursesPage({
                   <Link
                     href={`/dashboard/admin/courses/${course.id}/edit`}
                     aria-label="تعديل تفاصيل الكورس"
-                    className="text-slate-500 transition hover:text-gold-400"
+                    className="text-slate-400 transition hover:text-gold-400"
                   >
                     <Pencil size={14} />
                   </Link>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-400">
                   {course._count.enrollments} طالب مسجّل
                 </p>
               </div>

@@ -46,7 +46,7 @@ export default async function AdminUsersPage({
       {users.length === 0 ? (
         <div className="mt-8 flex flex-col items-center gap-3 rounded-card border border-white/10 bg-navy-900/60 p-16 text-center shadow-card">
           <Users size={32} className="text-slate-600" />
-          <p className="text-slate-500">لا يوجد مستخدمون مسجّلون بعد.</p>
+          <p className="text-slate-400">لا يوجد مستخدمون مسجّلون بعد.</p>
         </div>
       ) : (
         <div className="mt-8 overflow-x-auto rounded-card border border-white/10 bg-navy-900/60 shadow-card">
@@ -81,7 +81,7 @@ export default async function AdminUsersPage({
                       {ROLE_LABEL[user.role] ?? user.role}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-500">
+                  <td className="px-4 py-3 text-slate-400">
                     {new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium" }).format(user.createdAt)}
                   </td>
                 </tr>

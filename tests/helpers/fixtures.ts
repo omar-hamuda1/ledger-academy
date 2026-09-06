@@ -73,5 +73,6 @@ export async function cleanupCourse(courseId: string) {
 }
 
 export async function cleanupUser(userId: string) {
+  await db.auditLog.deleteMany({ where: { actorId: userId } });
   await db.user.delete({ where: { id: userId } }).catch(() => {});
 }

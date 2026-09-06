@@ -60,13 +60,13 @@ export function BreakEvenCalculator() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-control bg-navy-950/60 p-4">
-          <p className="text-xs text-slate-500">نقطة التعادل (بالوحدات)</p>
+          <p className="text-xs text-slate-400">نقطة التعادل (بالوحدات)</p>
           <p key={breakEvenUnits} className="mt-1 animate-pop text-2xl font-extrabold text-gold-400">
             {breakEvenUnits !== null ? breakEvenUnits.toLocaleString("ar-EG") : "—"}
           </p>
         </div>
         <div className="rounded-control bg-navy-950/60 p-4">
-          <p className="text-xs text-slate-500">نقطة التعادل (بالإيرادات)</p>
+          <p className="text-xs text-slate-400">نقطة التعادل (بالإيرادات)</p>
           <p key={breakEvenRevenue} className="mt-1 animate-pop text-2xl font-extrabold text-gold-400">
             {breakEvenRevenue !== null ? breakEvenRevenue.toLocaleString("ar-EG") : "—"}
           </p>

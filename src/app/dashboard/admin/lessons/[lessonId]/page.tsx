@@ -56,7 +56,7 @@ export default async function EditLessonPage({
         <h2 className="mb-4 font-bold text-white">الملفات المرفقة</h2>
 
         {lesson.resources.length === 0 ? (
-          <p className="text-sm text-slate-500">لا توجد ملفات مرفقة بعد.</p>
+          <p className="text-sm text-slate-400">لا توجد ملفات مرفقة بعد.</p>
         ) : (
           <ul className="space-y-2">
             {lesson.resources.map((resource) => (
@@ -85,7 +85,7 @@ export default async function EditLessonPage({
         ) : (
           <>
             {lesson.quiz.questions.length === 0 ? (
-              <p className="text-sm text-slate-500">لم تُضَف أي أسئلة بعد.</p>
+              <p className="text-sm text-slate-400">لم تُضَف أي أسئلة بعد.</p>
             ) : (
               <ul className="space-y-3">
                 {lesson.quiz.questions.map((question) => {

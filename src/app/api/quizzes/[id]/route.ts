@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
+import { logAudit } from "@/lib/audit";
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -9,6 +10,14 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   await db.quizAttempt.deleteMany({ where: { quizId: id } });
   await db.quiz.delete({ where: { id } });
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email ?? "unknown",
+    action: "quiz.delete",
+    targetType: "Quiz",
+    targetId: id,
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -20,7 +20,7 @@ export function LessonSidebar({
       <h2 className="mb-4 font-bold text-white">{course.title}</h2>
       {course.modules.map((module) => (
         <div key={module.id} className="mb-4">
-          <p className="mb-1 text-sm font-semibold text-slate-500">{module.title}</p>
+          <p className="mb-1 text-sm font-semibold text-slate-400">{module.title}</p>
           <ul className="space-y-1">
             {module.lessons.map((lesson) => {
               const isActive = lesson.id === activeLessonId;

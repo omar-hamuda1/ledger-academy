@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { createCourseSchema } from "@/lib/validators/course";
 import { MIN_EGP_PRICE } from "@/lib/pricing";
+import { logAudit } from "@/lib/audit";
 
 export async function GET() {
   const courses = await db.course.findMany({
@@ -42,6 +43,15 @@ export async function POST(req: Request) {
 
   const course = await db.course.create({
     data: { ...parsed.data, instructorId: admin.id },
+  });
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email ?? "unknown",
+    action: "course.create",
+    targetType: "Course",
+    targetId: course.id,
+    metadata: { title: course.title, slug: course.slug, price: parsed.data.price },
   });
 
   return NextResponse.json({ course }, { status: 201 });

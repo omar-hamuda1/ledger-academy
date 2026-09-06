@@ -69,7 +69,7 @@ export default async function StudentHomePage() {
             >
               <stat.icon size={18} className="text-gold-400" />
               <p className="text-xl font-extrabold text-white">{stat.value}</p>
-              <p className="text-[11px] text-slate-500">{stat.label}</p>
+              <p className="text-[11px] text-slate-400">{stat.label}</p>
             </div>
           ))}
         </div>

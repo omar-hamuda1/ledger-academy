@@ -71,7 +71,7 @@ export function EditLessonForm({
           placeholder="https://www.youtube.com/watch?v=..."
           className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-left text-white placeholder:text-slate-500 focus:border-gold-400 focus:outline-none"
         />
-        <p className="mt-1.5 text-xs text-slate-500">
+        <p className="mt-1.5 text-xs text-slate-400">
           ارفع الفيديو على يوتيوب كفيديو &quot;غير مُدرج (Unlisted)&quot; حتى لا يظهر في نتائج البحث، ثم الصق رابطه هنا. يعمل أيضًا مع أي رابط فيديو مباشر (.mp4).
         </p>
       </div>

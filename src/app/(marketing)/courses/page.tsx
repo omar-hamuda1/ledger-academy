@@ -30,7 +30,7 @@ export default async function CourseCatalogPage() {
         </div>
 
         {courses.length === 0 ? (
-          <p className="text-center text-slate-500">لا توجد كورسات منشورة حاليًا.</p>
+          <p className="text-center text-slate-400">لا توجد كورسات منشورة حاليًا.</p>
         ) : (
           <div className="grid gap-8 md:grid-cols-3">
             {courses.map((course) => (

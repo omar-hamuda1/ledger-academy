@@ -132,7 +132,7 @@ export default function RegisterPage() {
             {loading ? "جارٍ الإرسال..." : "إرسال رمز التحقق"}
           </button>
 
-          <p className="text-center text-xs text-slate-500">
+          <p className="text-center text-xs text-slate-400">
             بإنشاء حساب، أنت توافق على{" "}
             <Link href="/terms" className="text-gold-400 hover:underline">
               شروط الاستخدام

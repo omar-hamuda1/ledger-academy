@@ -75,7 +75,7 @@ export function SwotBoard() {
       </div>
 
       <div className="mt-4 flex items-center gap-2">
-        <p className="text-xs text-slate-500">يُحفظ تلقائيًا على هذا الجهاز.</p>
+        <p className="text-xs text-slate-400">يُحفظ تلقائيًا على هذا الجهاز.</p>
         {justSaved && (
           <span className="flex animate-fade-in items-center gap-1 text-xs font-semibold text-emerald-400">
             <Check size={13} />

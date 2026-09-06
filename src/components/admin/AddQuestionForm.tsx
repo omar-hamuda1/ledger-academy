@@ -92,7 +92,7 @@ export function AddQuestionForm({ quizId }: { quizId: string }) {
                 type="button"
                 onClick={() => removeOption(index)}
                 aria-label="حذف الخيار"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-red-500/10 hover:text-red-400"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400"
               >
                 <Trash2 size={14} />
               </button>
@@ -122,7 +122,7 @@ export function AddQuestionForm({ quizId }: { quizId: string }) {
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
-      <p className="text-xs text-slate-500">حدد الدائرة بجانب الإجابة الصحيحة.</p>
+      <p className="text-xs text-slate-400">حدد الدائرة بجانب الإجابة الصحيحة.</p>
     </form>
   );
 }

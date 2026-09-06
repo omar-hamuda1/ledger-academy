@@ -88,7 +88,7 @@ export function CreateCourseForm() {
           className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-left text-white focus:border-gold-400 focus:outline-none"
           placeholder="grade-10-business-administration"
         />
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           اكتب رابطًا بحروف إنجليزية فقط (لا يمكن اشتقاقه تلقائيًا من عنوان عربي). سيظهر كالتالي: /courses/{slug || "..."}
         </p>
       </div>

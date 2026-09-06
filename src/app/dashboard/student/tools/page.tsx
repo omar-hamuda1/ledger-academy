@@ -16,7 +16,7 @@ export default async function StudentToolsPage() {
 
       <div className="mt-8 space-y-6">
         {!settings.showBreakEvenTool && !settings.showSwotTool && (
-          <p className="text-slate-500">لا توجد أدوات متاحة حاليًا.</p>
+          <p className="text-slate-400">لا توجد أدوات متاحة حاليًا.</p>
         )}
         {settings.showBreakEvenTool && <BreakEvenCalculator />}
         {settings.showSwotTool && <SwotBoard />}

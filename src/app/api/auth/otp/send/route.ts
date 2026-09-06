@@ -9,7 +9,7 @@ const OTP_TTL_MS = 5 * 60 * 1000;
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  if (!checkRateLimit(`otp-send-ip:${ip}`, 10, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`otp-send-ip:${ip}`, 10, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "محاولات كثيرة جدًا، حاول لاحقًا." }, { status: 429 });
   }
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   const { email, purpose } = parsed.data;
 
-  if (!checkRateLimit(`otp-send:${email}`, 3, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`otp-send:${email}`, 3, 10 * 60 * 1000))) {
     return NextResponse.json(
       { error: "تم إرسال عدة رموز لهذا البريد بالفعل، حاول بعد قليل." },
       { status: 429 }

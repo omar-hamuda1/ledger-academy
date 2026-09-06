@@ -8,7 +8,7 @@ const VERIFICATION_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  if (!checkRateLimit(`register:${ip}`, 5, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`register:${ip}`, 5, 10 * 60 * 1000))) {
     return NextResponse.json(
       { error: "محاولات تسجيل كثيرة جدًا، حاول لاحقًا." },
       { status: 429 }

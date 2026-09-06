@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { updateCourseSchema } from "@/lib/validators/course";
 import { MIN_EGP_PRICE } from "@/lib/pricing";
+import { logAudit } from "@/lib/audit";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -32,6 +33,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...rest,
       ...(thumbnailUrl !== undefined ? { thumbnailUrl: thumbnailUrl || null } : {}),
     },
+  });
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email ?? "unknown",
+    action: "course.update",
+    targetType: "Course",
+    targetId: id,
+    metadata: parsed.data,
   });
 
   return NextResponse.json({ course });
