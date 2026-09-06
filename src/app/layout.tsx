@@ -1,0 +1,25 @@
+import type { Metadata } from "next";
+import { Cairo } from "next/font/google";
+import { Providers } from "@/components/providers";
+import "./globals.css";
+
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-cairo",
+});
+
+export const metadata: Metadata = {
+  title: "Ledger Academy | منصة إدارة الأعمال",
+  description: "منصة Ledger Academy لتعليم إدارة الأعمال لطلاب المرحلة الثانوية بأسلوب عصري وتفاعلي.",
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full antialiased`}>
+      <body className={`${cairo.className} flex min-h-screen flex-col`}>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}

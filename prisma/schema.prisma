@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  role         Role     @default(STUDENT)
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+
+  enrollments  Enrollment[]
+  progress     LessonProgress[]
+  quizAttempts QuizAttempt[]
+  coursesOwned Course[]         @relation("InstructorCourses")
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String
+  grade        String?
+  thumbnailUrl String?
+  price        Decimal  @default(0)
+  isPublished  Boolean  @default(false)
+  instructorId String
+  instructor   User     @relation("InstructorCourses", fields: [instructorId], references: [id])
+  createdAt    DateTime @default(now())
+
+  modules     Module[]
+  enrollments Enrollment[]
+}
+
+model Module {
+  id       String @id @default(cuid())
+  title    String
+  order    Int
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons Lesson[]
+}
+
+model Lesson {
+  id       String @id @default(cuid())
+  title    String
+  order    Int
+  moduleId String
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  videoUrl    String?
+  contentHtml String?
+  durationSec Int?
+
+  resources Resource[]
+  progress  LessonProgress[]
+  quiz      Quiz?
+}
+
+model Resource {
+  id       String @id @default(cuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  label    String
+  fileUrl  String
+  fileType String
+}
+
+model Enrollment {
+  id         String           @id @default(cuid())
+  userId     String
+  courseId   String
+  user       User             @relation(fields: [userId], references: [id])
+  course     Course           @relation(fields: [courseId], references: [id])
+  enrolledAt DateTime         @default(now())
+  status     EnrollmentStatus @default(ACTIVE)
+
+  @@unique([userId, courseId])
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model OtpCode {
+  id         String     @id @default(cuid())
+  email      String
+  purpose    OtpPurpose
+  codeHash   String
+  attempts   Int        @default(0)
+  verifiedAt DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime   @default(now())
+
+  @@index([email, purpose])
+}
+
+enum OtpPurpose {
+  SIGNUP
+  RESET
+}
+
+model SiteSettings {
+  id                String  @id @default("main")
+  studentsCount     Int     @default(5000)
+  satisfactionRate  Int     @default(98)
+  contactEmail      String  @default("info@ledgeracademy.com")
+  contactPhone      String  @default("+20000000000")
+  showBreakEvenTool Boolean @default(true)
+  showSwotTool      Boolean @default(true)
+}
+
+model LessonProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonId   String
+  user       User     @relation(fields: [userId], references: [id])
+  lesson     Lesson   @relation(fields: [lessonId], references: [id])
+  completed  Boolean  @default(false)
+  watchedSec Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+}
+
+model Quiz {
+  id        String     @id @default(cuid())
+  lessonId  String     @unique
+  lesson    Lesson     @relation(fields: [lessonId], references: [id])
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id        String @id @default(cuid())
+  quizId    String
+  quiz      Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  text      String
+  options   Json
+  correctId String
+}
+
+model QuizAttempt {
+  id      String   @id @default(cuid())
+  userId  String
+  quizId  String
+  user    User     @relation(fields: [userId], references: [id])
+  quiz    Quiz     @relation(fields: [quizId], references: [id])
+  score   Float
+  takenAt DateTime @default(now())
+}
