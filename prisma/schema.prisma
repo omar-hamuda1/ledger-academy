@@ -97,6 +97,9 @@ model Enrollment {
   status     EnrollmentStatus @default(ACTIVE)
 
   @@unique([userId, courseId])
+  // where:{userId} is served by the unique index's leading column; this covers
+  // the course-scoped reads (admin "enrollments per course", metrics).
+  @@index([courseId])
 }
 
 enum EnrollmentStatus {
@@ -252,6 +255,9 @@ model LessonProgress {
   updatedAt  DateTime @updatedAt
 
   @@unique([userId, lessonId])
+  // where:{userId} uses the unique index prefix; this covers lesson-scoped
+  // reads and the delete-cascade cleanup in /api/lessons/[id].
+  @@index([lessonId])
 }
 
 model Quiz {
@@ -269,6 +275,8 @@ model Question {
   text      String
   options   Json
   correctId String
+
+  @@index([quizId])
 }
 
 model QuizAttempt {
@@ -279,4 +287,7 @@ model QuizAttempt {
   quiz    Quiz     @relation(fields: [quizId], references: [id])
   score   Float
   takenAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([quizId])
 }
