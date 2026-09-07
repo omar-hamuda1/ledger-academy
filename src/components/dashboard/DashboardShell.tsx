@@ -122,7 +122,9 @@ export function DashboardShell({
         </div>
       )}
 
-      <div className="flex flex-1 flex-col">
+      {/* min-w-0 so a wide child (tables with overflow-x-auto) scrolls inside
+          itself instead of pushing the whole page wide on mobile. */}
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-white/10 bg-navy-950/80 px-4 py-3 backdrop-blur md:px-8">
           <button
             type="button"

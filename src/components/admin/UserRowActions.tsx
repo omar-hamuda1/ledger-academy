@@ -80,14 +80,24 @@ export function UserRowActions({
     }
   }
 
+  // Icon-only on small screens (labels would blow out the table on a phone),
+  // icon + label from sm up.
   const btn =
-    "inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1.5 text-xs text-slate-300 transition hover:border-gold-400/40 hover:text-gold-400 disabled:opacity-40";
+    "inline-flex items-center gap-1.5 rounded-lg border border-white/15 p-2 text-xs text-slate-300 transition hover:border-gold-400/40 hover:text-gold-400 disabled:opacity-40 sm:px-2.5 sm:py-1.5";
+  const label = "hidden sm:inline";
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      <button type="button" disabled={busy} onClick={resetPassword} className={btn}>
+    <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={resetPassword}
+        className={btn}
+        title="إعادة تعيين كلمة المرور"
+        aria-label="إعادة تعيين كلمة المرور"
+      >
         <KeyRound size={13} />
-        إعادة تعيين كلمة المرور
+        <span className={label}>إعادة تعيين كلمة المرور</span>
       </button>
 
       {role === "STUDENT" ? (
@@ -96,9 +106,11 @@ export function UserRowActions({
           disabled={busy}
           onClick={() => send({ action: "setRole", role: "ADMIN" }, "ترقية هذا المستخدم إلى محاضر؟")}
           className={btn}
+          title="ترقية إلى محاضر"
+          aria-label="ترقية إلى محاضر"
         >
           <ShieldPlus size={13} />
-          ترقية إلى محاضر
+          <span className={label}>ترقية إلى محاضر</span>
         </button>
       ) : (
         <button
@@ -106,9 +118,11 @@ export function UserRowActions({
           disabled={busy}
           onClick={() => send({ action: "setRole", role: "STUDENT" }, "خفض هذا المحاضر إلى طالب؟")}
           className={btn}
+          title="خفض إلى طالب"
+          aria-label="خفض إلى طالب"
         >
           <ShieldMinus size={13} />
-          خفض إلى طالب
+          <span className={label}>خفض إلى طالب</span>
         </button>
       )}
 
@@ -118,9 +132,11 @@ export function UserRowActions({
           disabled={busy}
           onClick={() => send({ action: "setDisabled", disabled: false })}
           className={btn}
+          title="إعادة التفعيل"
+          aria-label="إعادة التفعيل"
         >
           <RotateCcw size={13} />
-          إعادة التفعيل
+          <span className={label}>إعادة التفعيل</span>
         </button>
       ) : (
         <button
@@ -130,9 +146,11 @@ export function UserRowActions({
             send({ action: "setDisabled", disabled: true }, "تعطيل هذا الحساب؟ لن يتمكن صاحبه من تسجيل الدخول.")
           }
           className={`${btn} hover:border-red-400/40 hover:text-red-400`}
+          title="تعطيل الحساب"
+          aria-label="تعطيل الحساب"
         >
           <Ban size={13} />
-          تعطيل
+          <span className={label}>تعطيل</span>
         </button>
       )}
     </div>
