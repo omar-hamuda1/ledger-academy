@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # No database needed — catches type errors, lint errors, and schema mistakes
+  # before they auto-deploy. Runs on every push/PR.
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+  # Full build + the Vitest suite. Both need a Postgres URL:
+  #   - `next build` prerenders the ISR marketing pages, which query the DB
+  #   - the tests run against the dedicated Neon `test` branch
+  # Add a repo secret DATABASE_URL pointing at the Neon TEST branch (never prod),
+  # then this job runs automatically. Until then it's skipped, not failed.
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: static
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Guard on DATABASE_URL secret
+        id: guard
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -n "$DATABASE_URL" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::DATABASE_URL secret not set — skipping build + tests. Add it (Neon test branch) to enable."
+          fi
+      - name: Build
+        if: steps.guard.outputs.ready == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ci-placeholder-not-a-real-secret
+          NEXTAUTH_URL: http://localhost:3000
+        run: npm run build
+      - name: Tests
+        if: steps.guard.outputs.ready == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm test
