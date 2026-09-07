@@ -60,7 +60,7 @@ async function checkRateLimitRedis(key: string, limit: number, windowMs: number)
  * only works correctly on a single long-running process (fine for local
  * dev, NOT safe on serverless platforms like Vercel where each request can
  * hit a different instance with its own empty memory). Same nullable-client
- * pattern as `src/lib/stripe.ts` / `src/lib/email.ts`.
+ * pattern as `src/lib/email.ts`.
  */
 export async function checkRateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
   if (redis) return checkRateLimitRedis(key, limit, windowMs);

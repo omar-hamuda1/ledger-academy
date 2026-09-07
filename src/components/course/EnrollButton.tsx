@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, PlayCircle, CreditCard } from "lucide-react";
-import { formatEgp } from "@/lib/format";
+import { ArrowLeft, PlayCircle, KeyRound } from "lucide-react";
 
 export function EnrollButton({
   courseId,
@@ -47,6 +46,18 @@ export function EnrollButton({
     );
   }
 
+  // Paid course, not enrolled: access comes from a prepaid code or an
+  // approved code request — both live in the section directly below this
+  // button on the course page. No online card payment.
+  if (price > 0) {
+    return (
+      <div className="flex w-fit items-center gap-2 rounded-lg border border-gold-400/30 bg-gold-400/10 px-5 py-3 text-sm font-semibold text-gold-400">
+        <KeyRound size={16} />
+        كورس مدفوع — فعّل كودك أو اطلب كودًا بالأسفل
+      </div>
+    );
+  }
+
   async function handleEnroll() {
     setLoading(true);
     setError(null);
@@ -64,11 +75,6 @@ export function EnrollButton({
       return;
     }
 
-    if (data.url) {
-      window.location.href = data.url;
-      return;
-    }
-
     setLoading(false);
     setEnrolled(true);
     if (firstLessonHref) router.push(firstLessonHref);
@@ -82,13 +88,8 @@ export function EnrollButton({
         disabled={loading || status === "loading"}
         className="flex w-fit items-center gap-2 rounded-lg bg-gold-400 px-6 py-3 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
       >
-        {price > 0 ? <CreditCard size={18} /> : null}
-        {loading
-          ? "جارٍ التحميل..."
-          : price > 0
-          ? `الاشتراك مقابل ${formatEgp(price)}`
-          : "التسجيل في الكورس"}
-        {price <= 0 && <ArrowLeft size={18} />}
+        {loading ? "جارٍ التحميل..." : "التسجيل في الكورس"}
+        {!loading && <ArrowLeft size={18} />}
       </button>
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
