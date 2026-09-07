@@ -20,24 +20,31 @@ export async function GET() {
 
   const where = visibleNotificationsWhere(userId, role);
 
-  const [rows, unreadCount] = await Promise.all([
-    db.notification.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      include: { reads: { where: { userId }, select: { readAt: true } } },
-    }),
-    db.notification.count({ where: { ...where, reads: { none: { userId } } } }),
-  ]);
+  // One query, not two: the bell polls this per user on an interval, so the
+  // separate unread `count()` was doubling that load. `take: 20` already caps
+  // the list; unread is derived from those rows and the badge shows "9+"
+  // past 9 anyway, so an older-than-20 unread notification not being counted
+  // is immaterial.
+  const rows = await db.notification.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    include: { reads: { where: { userId }, select: { readAt: true } } },
+  });
 
-  const notifications = rows.map((n) => ({
-    id: n.id,
-    title: n.title,
-    body: n.body,
-    href: n.href,
-    createdAt: n.createdAt,
-    read: n.reads.length > 0,
-  }));
+  let unreadCount = 0;
+  const notifications = rows.map((n) => {
+    const read = n.reads.length > 0;
+    if (!read) unreadCount++;
+    return {
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      href: n.href,
+      createdAt: n.createdAt,
+      read,
+    };
+  });
 
   return NextResponse.json({ notifications, unreadCount });
 }

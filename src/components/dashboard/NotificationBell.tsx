@@ -18,7 +18,10 @@ type Item = {
   read: boolean;
 };
 
-const POLL_MS = 60_000;
+// Background poll. Kept deliberately gentle — a window `focus` listener
+// (below) refetches the moment the user returns to the tab, so this only
+// covers a student sitting on an already-focused dashboard.
+const POLL_MS = 90_000;
 const rel = new Intl.RelativeTimeFormat("ar-EG", { numeric: "auto" });
 
 function timeAgo(iso: string): string {
