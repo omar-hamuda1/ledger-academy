@@ -10,11 +10,13 @@ import {
   BookOpen,
   Settings,
   History,
+  Ticket,
 } from "lucide-react";
 
 const ACTIONS = [
   { href: "/dashboard/admin/courses/new", label: "إنشاء كورس جديد", icon: PlusCircle },
   { href: "/dashboard/admin/lessons", label: "إضافة درس أو وحدة", icon: BookOpen },
+  { href: "/dashboard/admin/prepaid-codes", label: "إنشاء أكواد كورسات", icon: Ticket },
   { href: "/dashboard/admin/settings", label: "الإعدادات العامة", icon: Settings },
   { href: "/dashboard/admin/audit", label: "سجل النشاط", icon: History },
 ] as const;

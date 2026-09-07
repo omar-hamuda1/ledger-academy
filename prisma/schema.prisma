@@ -16,10 +16,11 @@ model User {
   avatarUrl    String?
   createdAt    DateTime @default(now())
 
-  enrollments  Enrollment[]
-  progress     LessonProgress[]
-  quizAttempts QuizAttempt[]
-  coursesOwned Course[]         @relation("InstructorCourses")
+  enrollments   Enrollment[]
+  progress      LessonProgress[]
+  quizAttempts  QuizAttempt[]
+  coursesOwned  Course[]         @relation("InstructorCourses")
+  redeemedCodes PrepaidCode[]
 }
 
 enum Role {
@@ -40,8 +41,9 @@ model Course {
   instructor   User     @relation("InstructorCourses", fields: [instructorId], references: [id])
   createdAt    DateTime @default(now())
 
-  modules     Module[]
-  enrollments Enrollment[]
+  modules      Module[]
+  enrollments  Enrollment[]
+  prepaidCodes PrepaidCode[]
 }
 
 model Module {
@@ -95,6 +97,26 @@ enum EnrollmentStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+}
+
+// A single-use prepaid access code for one course. The lecturer generates
+// batches of these and sells/hands them out offline; a student redeems one to
+// get a real Enrollment without going through Stripe. Redemption is the
+// second (and only other) sanctioned enrollment-granting path besides
+// /api/checkout — see CLAUDE.md.
+model PrepaidCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  isUsed    Boolean   @default(false)
+  usedById  String?
+  usedBy    User?     @relation(fields: [usedById], references: [id])
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([courseId])
+  @@index([courseId, isUsed])
 }
 
 model OtpCode {
@@ -155,9 +177,9 @@ model LessonProgress {
 }
 
 model Quiz {
-  id        String     @id @default(cuid())
-  lessonId  String     @unique
-  lesson    Lesson     @relation(fields: [lessonId], references: [id])
+  id        String        @id @default(cuid())
+  lessonId  String        @unique
+  lesson    Lesson        @relation(fields: [lessonId], references: [id])
   questions Question[]
   attempts  QuizAttempt[]
 }

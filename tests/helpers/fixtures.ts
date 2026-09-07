@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
+import { generateCode } from "@/lib/prepaid-codes";
 
 export async function createUser(role: "ADMIN" | "STUDENT" = "STUDENT") {
   return db.user.create({
@@ -51,6 +52,12 @@ export async function enroll(userId: string, courseId: string) {
   return db.enrollment.create({ data: { userId, courseId } });
 }
 
+export async function createPrepaidCode(courseId: string, code?: string) {
+  return db.prepaidCode.create({
+    data: { courseId, code: code ?? generateCode() },
+  });
+}
+
 export async function cleanupCourse(courseId: string) {
   const modules = await db.module.findMany({
     where: { courseId },
@@ -69,6 +76,7 @@ export async function cleanupCourse(courseId: string) {
   }
   await db.module.deleteMany({ where: { courseId } });
   await db.enrollment.deleteMany({ where: { courseId } });
+  await db.prepaidCode.deleteMany({ where: { courseId } });
   await db.course.delete({ where: { id: courseId } }).catch(() => {});
 }
 

@@ -7,6 +7,7 @@ import { calculateStreakDays, getAchievements } from "@/lib/gamification";
 import { getSiteSettings } from "@/lib/site-settings";
 import { GamificationWidget } from "@/components/dashboard/GamificationWidget";
 import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
+import { RedeemCodeForm } from "@/components/course/RedeemCodeForm";
 import { StudentCourseList, type StudentCourseItem } from "@/components/dashboard/StudentCourseList";
 
 export const dynamic = "force-dynamic";
@@ -141,6 +142,10 @@ export default async function StudentHomePage() {
       ) : (
         <StudentCourseList courses={courses} />
       )}
+
+      <div className="mt-8 max-w-md">
+        <RedeemCodeForm />
+      </div>
     </div>
   );
 }

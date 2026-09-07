@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, TrendingUp, Users, Banknote } from "lucide-react";
+import { BookOpen, TrendingUp, Users, Banknote, Ticket } from "lucide-react";
 import { getAdminMetrics } from "@/lib/admin-metrics";
 import { AdminStatCards } from "@/components/admin/AdminStatCards";
 import { AdminCharts } from "@/components/admin/AdminCharts";
@@ -31,6 +31,12 @@ const cards = [
     icon: Users,
     title: "الطلاب والمستخدمون",
     description: "استعرض جميع الحسابات المسجلة على المنصة وأدوارها.",
+  },
+  {
+    href: "/dashboard/admin/prepaid-codes",
+    icon: Ticket,
+    title: "أكواد الكورسات",
+    description: "أنشئ أكواد تفعيل مدفوعة مسبقًا وتابع المستخدَم منها.",
   },
 ];
 

@@ -17,6 +17,7 @@ import {
   Banknote,
   Settings,
   History,
+  Ticket,
 } from "lucide-react";
 import { SignOutButton } from "./SignOutButton";
 
@@ -29,6 +30,7 @@ const navConfig = {
       { href: "/dashboard/admin/lessons", label: "إدارة الدروس", icon: BookOpen },
       { href: "/dashboard/admin/progress", label: "تقدم الطلاب", icon: TrendingUp },
       { href: "/dashboard/admin/users", label: "الطلاب والمستخدمون", icon: Users },
+      { href: "/dashboard/admin/prepaid-codes", label: "أكواد الكورسات", icon: Ticket },
       { href: "/dashboard/admin/settings", label: "الإعدادات العامة", icon: Settings },
       { href: "/dashboard/admin/audit", label: "سجل النشاط", icon: History },
     ],

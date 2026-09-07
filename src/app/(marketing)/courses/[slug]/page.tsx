@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
 import { LedgerFooter } from "@/components/ledger-academy/LedgerFooter";
 import { EnrollButton } from "@/components/course/EnrollButton";
+import { RedeemCodeForm } from "@/components/course/RedeemCodeForm";
 
 const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
@@ -57,6 +58,12 @@ export default async function CourseDetailPage({
             price={Number(course.price)}
           />
         </div>
+
+        {userId && !enrollment && (
+          <div className="mt-4 max-w-md">
+            <RedeemCodeForm courseId={course.id} />
+          </div>
+        )}
 
         <div className="mt-10 space-y-4">
           {course.modules.map((module, index) => (
