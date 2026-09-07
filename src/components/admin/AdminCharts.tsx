@@ -95,6 +95,8 @@ export function AdminCharts({
               tick={{ fill: AXIS, fontSize: 11, fontFamily: "var(--font-cairo)" }}
               tickLine={false}
               axisLine={{ stroke: GRID }}
+              interval="preserveStartEnd"
+              minTickGap={16}
             />
             <YAxis
               allowDecimals={false}
@@ -151,8 +153,8 @@ export function AdminCharts({
               <YAxis
                 type="category"
                 dataKey="title"
-                width={110}
-                tick={{ fill: AXIS, fontSize: 11, fontFamily: "var(--font-cairo)" }}
+                width={96}
+                tick={{ fill: AXIS, fontSize: 10, fontFamily: "var(--font-cairo)" }}
                 tickLine={false}
                 axisLine={false}
               />

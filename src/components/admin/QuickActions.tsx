@@ -66,7 +66,7 @@ export function QuickActions() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 z-20 mt-2 w-60 overflow-hidden rounded-card border border-white/10 bg-navy-900 p-1.5 shadow-elevated"
+            className="absolute right-0 z-20 mt-2 w-60 max-w-[calc(100vw-3rem)] overflow-hidden rounded-card border border-white/10 bg-navy-900 p-1.5 shadow-elevated"
           >
             {ACTIONS.map((action) => (
               <Link

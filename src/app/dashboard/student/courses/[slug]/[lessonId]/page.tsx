@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { VideoPlayer } from "@/components/course/VideoPlayer";
-import { LessonSidebar } from "@/components/course/LessonSidebar";
+import { LessonSidebar, MobileLessonNav } from "@/components/course/LessonSidebar";
 import { LessonWorkspacePanel } from "@/components/course/LessonWorkspacePanel";
 import { MarkCompleteButton } from "@/components/course/MarkCompleteButton";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -59,7 +59,12 @@ export default async function LessonPage({
   return (
     <div dir="rtl" lang="ar" className="flex flex-1 bg-navy-950 text-slate-100">
       <LessonSidebar course={course} activeLessonId={lesson.id} completedLessonIds={completedLessonIds} />
-      <div className="flex-1 p-6 md:p-8">
+      <div className="flex-1 p-4 pb-24 sm:p-6 md:p-8">
+        <MobileLessonNav
+          course={course}
+          activeLessonId={lesson.id}
+          completedLessonIds={completedLessonIds}
+        />
         <h1 className="text-2xl font-extrabold text-white">{lesson.title}</h1>
         <VideoPlayer videoUrl={lesson.videoUrl} />
         {lesson.contentHtml && (
