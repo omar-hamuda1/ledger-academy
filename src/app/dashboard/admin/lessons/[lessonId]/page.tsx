@@ -8,6 +8,7 @@ import { DeleteResourceButton } from "@/components/admin/DeleteResourceButton";
 import { CreateQuizButton } from "@/components/admin/CreateQuizButton";
 import { AddQuestionForm } from "@/components/admin/AddQuestionForm";
 import { DeleteQuestionButton } from "@/components/admin/DeleteQuestionButton";
+import { DeleteQuizButton } from "@/components/admin/DeleteQuizButton";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +79,10 @@ export default async function EditLessonPage({
       </div>
 
       <div className="mt-6 rounded-2xl border border-white/10 bg-navy-900/60 p-6">
-        <h2 className="mb-4 font-bold text-white">الاختبار القصير</h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="font-bold text-white">الاختبار القصير</h2>
+          {lesson.quiz && <DeleteQuizButton quizId={lesson.quiz.id} />}
+        </div>
 
         {!lesson.quiz ? (
           <CreateQuizButton lessonId={lesson.id} />
