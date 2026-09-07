@@ -4,7 +4,9 @@ import { db } from "@/lib/db";
 import { BookOpen, Flame, Trophy, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { calculateStreakDays, getAchievements } from "@/lib/gamification";
+import { getSiteSettings } from "@/lib/site-settings";
 import { GamificationWidget } from "@/components/dashboard/GamificationWidget";
+import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
 import { StudentCourseList, type StudentCourseItem } from "@/components/dashboard/StudentCourseList";
 
 export const dynamic = "force-dynamic";
@@ -59,6 +61,12 @@ export default async function StudentHomePage() {
   const streakDays = calculateStreakDays(completedProgress.map((p) => p.updatedAt));
   const achievements = getAchievements(completedProgress.length, quizzesPassed, streakDays);
 
+  const settings = await getSiteSettings();
+  const announcement =
+    settings.announcementActive && settings.announcement?.trim()
+      ? settings.announcement.trim()
+      : null;
+
   const courses: StudentCourseItem[] = enrollments.map((enrollment) => {
     const lessons = enrollment.course.modules.flatMap((module) => module.lessons);
     const completedCount = lessons.filter((lesson) => completedLessonIds.has(lesson.id)).length;
@@ -85,6 +93,12 @@ export default async function StudentHomePage() {
         أهلًا بك{session?.user?.name ? `، ${session.user.name}` : ""}
       </h1>
       <p className="mt-2 text-slate-400">تابع كورساتك وأكمل رحلتك في إدارة الأعمال.</p>
+
+      {announcement && (
+        <div className="mt-6">
+          <AnnouncementBanner text={announcement} />
+        </div>
+      )}
 
       {enrollments.length > 0 && (
         <>

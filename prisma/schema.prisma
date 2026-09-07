@@ -130,13 +130,15 @@ model AuditLog {
 }
 
 model SiteSettings {
-  id                String  @id @default("main")
-  studentsCount     Int     @default(5000)
-  satisfactionRate  Int     @default(98)
-  contactEmail      String  @default("info@ledgeracademy.com")
-  contactPhone      String  @default("+20000000000")
-  showBreakEvenTool Boolean @default(true)
-  showSwotTool      Boolean @default(true)
+  id                 String  @id @default("main")
+  studentsCount      Int     @default(5000)
+  satisfactionRate   Int     @default(98)
+  contactEmail       String  @default("info@ledgeracademy.com")
+  contactPhone       String  @default("+20000000000")
+  showBreakEvenTool  Boolean @default(true)
+  showSwotTool       Boolean @default(true)
+  announcement       String?
+  announcementActive Boolean @default(false)
 }
 
 model LessonProgress {

@@ -21,6 +21,8 @@ export default async function AdminSettingsPage() {
           initialContactPhone={settings.contactPhone}
           initialShowBreakEvenTool={settings.showBreakEvenTool}
           initialShowSwotTool={settings.showSwotTool}
+          initialAnnouncement={settings.announcement ?? ""}
+          initialAnnouncementActive={settings.announcementActive}
         />
       </div>
     </div>
