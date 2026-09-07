@@ -1,5 +1,6 @@
 import { Cairo } from "next/font/google";
 import { db } from "@/lib/db";
+import { courseMeta } from "@/lib/course-meta";
 import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
 import { LedgerFooter } from "@/components/ledger-academy/LedgerFooter";
 import { CourseCard } from "@/components/ledger-academy/CourseCard";
@@ -12,6 +13,17 @@ export default async function CourseCatalogPage() {
   const courses = await db.course.findMany({
     where: { isPublished: true },
     orderBy: { createdAt: "asc" },
+    include: {
+      modules: {
+        orderBy: { order: "asc" },
+        include: {
+          lessons: {
+            orderBy: { order: "asc" },
+            include: { quiz: { select: { id: true } } },
+          },
+        },
+      },
+    },
   });
 
   return (
@@ -25,16 +37,24 @@ export default async function CourseCatalogPage() {
             كل كورسات إدارة الأعمال
           </h1>
           <p className="mt-4 text-slate-400">
-            اختر مستواك الدراسي وابدأ رحلتك التعليمية في إدارة الأعمال.
+            اختر مستواك الدراسي وابدأ رحلتك التعليمية في إدارة الأعمال — شرح مبسّط،
+            اختبار بعد كل درس، وأدوات عملية تفاعلية.
           </p>
         </div>
 
         {courses.length === 0 ? (
-          <p className="text-center text-slate-400">لا توجد كورسات منشورة حاليًا.</p>
+          <div className="rounded-card border border-dashed border-white/15 bg-navy-900/40 p-16 text-center text-slate-400">
+            لا توجد كورسات منشورة حاليًا — تابعنا قريبًا.
+          </div>
         ) : (
-          <div className="grid gap-8 md:grid-cols-3">
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+          <div className="grid gap-6 md:grid-cols-3">
+            {courses.map((course, i) => (
+              <CourseCard
+                key={course.id}
+                course={{ ...course, price: Number(course.price) }}
+                meta={courseMeta(course.modules)}
+                featured={courses.length >= 3 && i === 1}
+              />
             ))}
           </div>
         )}
