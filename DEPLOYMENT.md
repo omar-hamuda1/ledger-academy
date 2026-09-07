@@ -54,8 +54,9 @@ ones by hand.
 | `AWS_REGION` | for uploads | ″ (`eu-central-1`) |
 | `UPSTASH_REDIS_REST_URL` | recommended | Free account at upstash.com (no card). **Without it, rate limiting is effectively off on serverless** — each request can hit a fresh instance with an empty in-memory counter, so the OTP / login / redeem limits don't hold. |
 | `UPSTASH_REDIS_REST_TOKEN` | recommended | ″ |
-| `SENDGRID_API_KEY` | for real signups | Still not set up. Until it is, OTP emails only `console.log` — which is invisible on serverless, so **signup / password reset don't work for anyone but a dev reading logs**. Track separately. |
-| `EMAIL_FROM` | for real signups | ″ |
+| `BREVO_API_KEY` | for real signups | Brevo → SMTP & API → API Keys. Free tier 300 emails/day, no card. Until it's set, OTP emails only `console.log` — invisible on serverless, so **signup / password reset don't work for anyone but a dev reading logs**. |
+| `EMAIL_FROM` | for real signups | A sender address verified in Brevo (Senders, Domains & Dedicated IPs → Senders). |
+| `EMAIL_FROM_NAME` | optional | Display name on the email; defaults to `Ledger Academy`. |
 
 Do **not** set `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, or anything from
 `.env.test` — those are local-only (Prisma CLI / tests).
