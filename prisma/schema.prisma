@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   name         String
-  email        String   @unique
+  email        String    @unique
   passwordHash String?
-  role         Role     @default(STUDENT)
+  role         Role      @default(STUDENT)
   avatarUrl    String?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
+  disabledAt   DateTime? // set by an admin -> login is refused
 
   enrollments           Enrollment[]
   progress              LessonProgress[]

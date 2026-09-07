@@ -1,0 +1,100 @@
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from "vitest";
+
+vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
+
+import { getServerSession } from "next-auth";
+import { db } from "@/lib/db";
+import { PATCH } from "@/app/api/users/[id]/route";
+import { createUser, cleanupUser } from "../helpers/fixtures";
+
+// PATCH /api/users/[id] — admin promote/demote + disable/enable, added
+// 2026-09-07. Guards: no self-edit, always keep one active ADMIN.
+describe("PATCH /api/users/[id]", () => {
+  let admin: Awaited<ReturnType<typeof createUser>>;
+  let other: Awaited<ReturnType<typeof createUser>>;
+
+  beforeAll(async () => {
+    admin = await createUser("ADMIN");
+    other = await createUser("STUDENT");
+  });
+
+  afterAll(async () => {
+    await cleanupUser(admin.id);
+    await cleanupUser(other.id);
+  });
+
+  beforeEach(() => {
+    vi.mocked(getServerSession).mockReset();
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: admin.id, role: "ADMIN" },
+    } as never);
+  });
+
+  const call = (id: string, body: unknown) =>
+    PATCH(
+      new Request("http://localhost", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+
+  it("promotes a STUDENT to ADMIN and back down (another admin exists)", async () => {
+    const up = await call(other.id, { action: "setRole", role: "ADMIN" });
+    expect(up.status).toBe(200);
+    expect((await db.user.findUnique({ where: { id: other.id } }))!.role).toBe("ADMIN");
+
+    const down = await call(other.id, { action: "setRole", role: "STUDENT" });
+    expect(down.status).toBe(200);
+    expect((await db.user.findUnique({ where: { id: other.id } }))!.role).toBe("STUDENT");
+  });
+
+  it("disables then re-enables a student", async () => {
+    const off = await call(other.id, { action: "setDisabled", disabled: true });
+    expect(off.status).toBe(200);
+    expect((await db.user.findUnique({ where: { id: other.id } }))!.disabledAt).not.toBeNull();
+
+    const on = await call(other.id, { action: "setDisabled", disabled: false });
+    expect(on.status).toBe(200);
+    expect((await db.user.findUnique({ where: { id: other.id } }))!.disabledAt).toBeNull();
+  });
+
+  it("refuses to demote the last active admin (409)", async () => {
+    const solo = await createUser("ADMIN");
+    // Park every other active admin so `solo` is the only one left.
+    const parked = await db.user.findMany({
+      where: { role: "ADMIN", disabledAt: null, id: { not: solo.id } },
+      select: { id: true },
+    });
+    await db.user.updateMany({
+      where: { id: { in: parked.map((p) => p.id) } },
+      data: { disabledAt: new Date() },
+    });
+    try {
+      const res = await call(solo.id, { action: "setRole", role: "STUDENT" });
+      expect(res.status).toBe(409);
+      expect((await db.user.findUnique({ where: { id: solo.id } }))!.role).toBe("ADMIN");
+    } finally {
+      await db.user.updateMany({
+        where: { id: { in: parked.map((p) => p.id) } },
+        data: { disabledAt: null },
+      });
+      await cleanupUser(solo.id);
+    }
+  });
+
+  it("won't let an admin edit their own row (400)", async () => {
+    const res = await call(admin.id, { action: "setRole", role: "STUDENT" });
+    expect(res.status).toBe(400);
+    expect((await db.user.findUnique({ where: { id: admin.id } }))!.role).toBe("ADMIN");
+  });
+
+  it("rejects a non-admin (403)", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: other.id, role: "STUDENT" },
+    } as never);
+    const res = await call(admin.id, { action: "setDisabled", disabled: true });
+    expect(res.status).toBe(403);
+  });
+});

@@ -34,6 +34,13 @@ export const authOptions: NextAuthOptions = {
         );
         if (!isValid) return null;
 
+        // Disabled by an admin (see PATCH /api/users/[id]). An already-issued
+        // JWT session stays valid until it expires — this only blocks new
+        // logins.
+        if (user.disabledAt) {
+          throw new Error("تم تعطيل هذا الحساب. تواصل مع إدارة المنصة.");
+        }
+
         return { id: user.id, name: user.name, email: user.email, role: user.role };
       },
     }),
