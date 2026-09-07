@@ -21,6 +21,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { SignOutButton } from "./SignOutButton";
+import { NotificationBell } from "./NotificationBell";
 
 const navConfig = {
   admin: {
@@ -133,7 +134,8 @@ export function DashboardShell({
           <div className="hidden md:block" />
 
           <div className="flex items-center gap-3">
-            {userName && <span className="text-sm text-slate-300">{userName}</span>}
+            {userName && <span className="hidden text-sm text-slate-300 sm:inline">{userName}</span>}
+            <NotificationBell />
             <SignOutButton />
           </div>
         </header>

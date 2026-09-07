@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { paymentProofStore } from "@/lib/storage";
 import { Pagination } from "@/components/admin/Pagination";
 import {
   CodeOrdersTable,
@@ -53,6 +54,26 @@ export default async function AdminCodeOrdersPage({
     all: pendingCount + approvedCount + rejectedCount,
   };
 
+  // Short-lived presigned GET URLs so the private screenshots render in the
+  // table without making the bucket public. Regenerated each page load
+  // (the page is force-dynamic).
+  const proofUrls = new Map<string, string>();
+  const store = paymentProofStore;
+  if (store) {
+    await Promise.all(
+      orders
+        .filter((o) => o.paymentProofKey)
+        .map(async (o) => {
+          try {
+            const url = await store.url(o.paymentProofKey!, { expiresIn: 3600 });
+            proofUrls.set(o.id, url);
+          } catch {
+            /* leave it out — the row just shows no thumbnail */
+          }
+        }),
+    );
+  }
+
   const rows: CodeOrderRow[] = orders.map((o) => ({
     id: o.id,
     studentName: o.user.name,
@@ -60,6 +81,7 @@ export default async function AdminCodeOrdersPage({
     studentPhone: o.studentPhone,
     courseTitle: o.course.title,
     paymentNote: o.paymentNote,
+    proofUrl: proofUrls.get(o.id) ?? null,
     status: o.status,
     rejectionReason: o.rejectionReason,
     issuedCode: o.prepaidCode?.code ?? null,

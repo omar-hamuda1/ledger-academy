@@ -65,6 +65,7 @@ export async function createCodeOrder(userId: string, courseId: string) {
       courseId,
       studentPhone: "01000000000",
       paymentNote: "Vodafone Cash #test",
+      paymentProofKey: `proofs/${userId}/${randomUUID()}.jpg`,
     },
   });
 }
@@ -94,6 +95,7 @@ export async function cleanupCourse(courseId: string) {
 
 export async function cleanupUser(userId: string) {
   await db.auditLog.deleteMany({ where: { actorId: userId } });
+  await db.notification.deleteMany({ where: { userId } });
   await db.codeOrder.deleteMany({
     where: { OR: [{ userId }, { reviewedById: userId }] },
   });

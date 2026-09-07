@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createCodeOrderSchema } from "@/lib/validators/code-orders";
+import { paymentProofPrefix } from "@/lib/storage";
+import { notify } from "@/lib/notify";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -32,7 +34,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
   }
 
-  const { courseId, studentPhone, paymentNote } = parsed.data;
+  const { courseId, studentPhone, paymentNote, paymentProofKey } = parsed.data;
+
+  // The proof must be an object this user uploaded (keys are namespaced by
+  // uploader), not an arbitrary string or someone else's key.
+  if (!paymentProofKey.startsWith(paymentProofPrefix(userId))) {
+    return NextResponse.json(
+      { error: "صورة إثبات الدفع غير صالحة." },
+      { status: 400 },
+    );
+  }
 
   const course = await db.course.findUnique({ where: { id: courseId } });
   if (!course) {
@@ -65,7 +76,18 @@ export async function POST(req: Request) {
   }
 
   const order = await db.codeOrder.create({
-    data: { userId, courseId, studentPhone, paymentNote },
+    data: { userId, courseId, studentPhone, paymentNote, paymentProofKey },
+  });
+
+  const admins = await db.user.findMany({
+    where: { role: "ADMIN" },
+    select: { id: true },
+  });
+  await notify({
+    userId: admins.map((a) => a.id),
+    title: "طلب كود جديد",
+    body: `${session.user.name ?? "طالب"} طلب كودًا لكورس «${course.title}».`,
+    href: "/dashboard/admin/code-orders",
   });
 
   return NextResponse.json({ order }, { status: 201 });

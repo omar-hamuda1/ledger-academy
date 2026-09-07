@@ -23,6 +23,7 @@ model User {
   redeemedCodes      PrepaidCode[]
   codeOrders         CodeOrder[]      @relation("RequestedCodeOrders")
   reviewedCodeOrders CodeOrder[]      @relation("ReviewedCodeOrders")
+  notifications      Notification[]
 }
 
 enum Role {
@@ -138,6 +139,7 @@ model CodeOrder {
   status          CodeOrderStatus @default(PENDING)
   studentPhone    String
   paymentNote     String
+  paymentProofKey String?
   reviewedById    String?
   reviewedBy      User?           @relation("ReviewedCodeOrders", fields: [reviewedById], references: [id])
   reviewedAt      DateTime?
@@ -156,6 +158,23 @@ enum CodeOrderStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// A per-user in-app notification (bell menu in the dashboard header). Written
+// best-effort by src/lib/notify.ts — currently on CodeOrder approve/reject
+// (to the student) and CodeOrder create (to admins).
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
 }
 
 model OtpCode {

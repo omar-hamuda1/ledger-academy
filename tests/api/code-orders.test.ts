@@ -62,24 +62,54 @@ describe("code orders", () => {
       user: { id: instructor.id, role: "ADMIN", email: instructor.email },
     } as never);
 
+  const proofFor = (uid: string) => `proofs/${uid}/${uid}-proof.jpg`;
+
+  it("rejects a request whose payment-proof key isn't the caller's own", async () => {
+    asUser(student.id);
+    const res = await createOrder(
+      createReq({
+        courseId: paidCourse.id,
+        studentPhone: "01000000000",
+        paymentNote: "VC #900",
+        paymentProofKey: proofFor("someone-else"),
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a request with no payment-proof key", async () => {
+    asUser(student.id);
+    const res = await createOrder(
+      createReq({ courseId: paidCourse.id, studentPhone: "01000000000", paymentNote: "VC #901" }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("rejects an order request for a free course", async () => {
     asUser(student.id);
     const res = await createOrder(
-      createReq({ courseId: freeCourse.id, studentPhone: "01000000000", paymentNote: "n/a" }),
+      createReq({
+        courseId: freeCourse.id,
+        studentPhone: "01000000000",
+        paymentNote: "n/a",
+        paymentProofKey: proofFor(student.id),
+      }),
     );
     expect(res.status).toBe(400);
   });
 
   it("creates a pending order and dedupes a second request", async () => {
     asUser(student.id);
-    const first = await createOrder(
-      createReq({ courseId: paidCourse.id, studentPhone: "01234567890", paymentNote: "VC #111" }),
-    );
+    const body = {
+      courseId: paidCourse.id,
+      studentPhone: "01234567890",
+      paymentNote: "VC #111",
+      paymentProofKey: proofFor(student.id),
+    };
+    const first = await createOrder(createReq(body));
     expect(first.status).toBe(201);
 
-    const second = await createOrder(
-      createReq({ courseId: paidCourse.id, studentPhone: "01234567890", paymentNote: "VC #111" }),
-    );
+    const second = await createOrder(createReq(body));
     const data = await second.json();
     expect(data.alreadyPending).toBe(true);
 
@@ -122,6 +152,9 @@ describe("code orders", () => {
     });
     expect(enrollment).not.toBeNull();
 
+    const note = await db.notification.findFirst({ where: { userId: buyer.id } });
+    expect(note?.title).toContain("تفعيل");
+
     const again = await reviewOrder(reviewReq({ action: "approve" }), {
       params: Promise.resolve({ id: order.id }),
     });
@@ -149,6 +182,9 @@ describe("code orders", () => {
       where: { userId_courseId: { userId: buyer.id, courseId: paidCourse.id } },
     });
     expect(enrollment).toBeNull();
+
+    const note = await db.notification.findFirst({ where: { userId: buyer.id } });
+    expect(note?.title).toContain("رفض");
 
     await cleanupUser(buyer.id);
   });

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, X, Inbox } from "lucide-react";
+import { Check, X, Inbox, ImageOff } from "lucide-react";
 import { formatCode } from "@/lib/prepaid-codes";
 
 export type CodeOrderRow = {
@@ -13,6 +13,7 @@ export type CodeOrderRow = {
   studentPhone: string;
   courseTitle: string;
   paymentNote: string;
+  proofUrl: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
   rejectionReason: string | null;
   issuedCode: string | null;
@@ -71,6 +72,7 @@ export function CodeOrdersTable({ rows }: { rows: CodeOrderRow[] }) {
             <th className="px-4 py-3 font-semibold">الطالب</th>
             <th className="px-4 py-3 font-semibold">الكورس</th>
             <th className="px-4 py-3 font-semibold">بيانات الدفع</th>
+            <th className="px-4 py-3 font-semibold">إثبات الدفع</th>
             <th className="px-4 py-3 font-semibold">التاريخ</th>
             <th className="px-4 py-3 font-semibold">الحالة</th>
             <th className="px-4 py-3 font-semibold">إجراء</th>
@@ -99,6 +101,22 @@ export function CodeOrdersTable({ rows }: { rows: CodeOrderRow[] }) {
                 )}
                 {row.rejectionReason && (
                   <p className="mt-1 text-xs text-red-400">السبب: {row.rejectionReason}</p>
+                )}
+              </td>
+              <td className="px-4 py-3">
+                {row.proofUrl ? (
+                  <a href={row.proofUrl} target="_blank" rel="noopener noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- presigned S3 URL, expires hourly; next/image can't cache it */}
+                    <img
+                      src={row.proofUrl}
+                      alt="إثبات الدفع"
+                      className="h-16 w-16 rounded-control border border-white/10 object-cover transition hover:opacity-80"
+                    />
+                  </a>
+                ) : (
+                  <span className="flex h-16 w-16 items-center justify-center rounded-control border border-dashed border-white/15 text-slate-600">
+                    <ImageOff size={16} />
+                  </span>
                 )}
               </td>
               <td className="px-4 py-3 text-xs text-slate-400">

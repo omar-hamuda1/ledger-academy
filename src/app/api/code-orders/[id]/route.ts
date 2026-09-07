@@ -3,8 +3,9 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { reviewCodeOrderSchema } from "@/lib/validators/code-orders";
-import { generateCode } from "@/lib/prepaid-codes";
+import { generateCode, formatCode } from "@/lib/prepaid-codes";
 import { logAudit } from "@/lib/audit";
+import { notify } from "@/lib/notify";
 
 export async function PATCH(
   req: Request,
@@ -20,10 +21,14 @@ export async function PATCH(
     return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
   }
 
-  const order = await db.codeOrder.findUnique({ where: { id } });
+  const order = await db.codeOrder.findUnique({
+    where: { id },
+    include: { course: { select: { title: true, slug: true } } },
+  });
   if (!order) {
     return NextResponse.json({ error: "الطلب غير موجود." }, { status: 404 });
   }
+  const courseHref = `/courses/${order.course.slug}`;
   if (order.status !== "PENDING") {
     return NextResponse.json(
       { error: "تمت مراجعة هذا الطلب من قبل." },
@@ -49,6 +54,14 @@ export async function PATCH(
       targetId: id,
       metadata: { courseId: order.courseId, studentId: order.userId },
     });
+    await notify({
+      userId: order.userId,
+      title: "تم رفض طلبك",
+      body: `طلبك لكورس «${order.course.title}» لم تتم الموافقة عليه${
+        parsed.data.rejectionReason ? ` — ${parsed.data.rejectionReason}` : "."
+      }`,
+      href: courseHref,
+    });
     return NextResponse.json({ order: updated });
   }
 
@@ -70,6 +83,12 @@ export async function PATCH(
       targetType: "CodeOrder",
       targetId: id,
       metadata: { courseId: order.courseId, studentId: order.userId, note: "already enrolled" },
+    });
+    await notify({
+      userId: order.userId,
+      title: "تمت الموافقة على طلبك",
+      body: `أنت مسجّل بالفعل في كورس «${order.course.title}» — يمكنك متابعة التعلم مباشرة.`,
+      href: courseHref,
     });
     return NextResponse.json({ order: updated, alreadyEnrolled: true });
   }
@@ -116,6 +135,12 @@ export async function PATCH(
       targetId: id,
       metadata: { courseId: order.courseId, studentId: order.userId },
     });
+    await notify({
+      userId: order.userId,
+      title: "تم تفعيل الكورس",
+      body: `تمت الموافقة على طلبك لكورس «${order.course.title}». كودك: ${formatCode(code)} — وتم فتح الكورس لك.`,
+      href: courseHref,
+    });
 
     return NextResponse.json({ order: updated });
   } catch (error) {
@@ -128,6 +153,12 @@ export async function PATCH(
       const updated = await db.codeOrder.update({
         where: { id },
         data: { status: "APPROVED", reviewedById: admin.id, reviewedAt: new Date() },
+      });
+      await notify({
+        userId: order.userId,
+        title: "تمت الموافقة على طلبك",
+        body: `كورس «${order.course.title}» مُفعّل لديك بالفعل — يمكنك متابعة التعلم.`,
+        href: courseHref,
       });
       return NextResponse.json({ order: updated, alreadyEnrolled: true });
     }

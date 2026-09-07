@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ShoppingCart, Clock } from "lucide-react";
+import { ShoppingCart, Clock, ImageUp } from "lucide-react";
+
+const MAX_BYTES = 5 * 1024 * 1024;
 
 export function RequestAccessForm({
   courseId,
@@ -16,8 +18,10 @@ export function RequestAccessForm({
   paymentInstructions: string | null;
 }) {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(pending);
@@ -30,23 +34,50 @@ export function RequestAccessForm({
           طلبك قيد المراجعة
         </div>
         <p className="mt-1 text-xs text-slate-400">
-          سنراجع تحويلك ونفتح لك الكورس في أقرب وقت. ستجد حالة الطلب في لوحة تحكم
-          الطالب.
+          سنراجع تحويلك ونفتح لك الكورس في أقرب وقت. ستصلك إشعارًا عند الرد، وتجد
+          حالة الطلب في لوحة تحكم الطالب.
         </p>
       </div>
     );
   }
 
+  const canSubmit =
+    !!phone.trim() && note.trim().length >= 3 && !!fileName && !loading;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (loading || !phone.trim() || note.trim().length < 3) return;
+    const file = fileRef.current?.files?.[0];
+    if (loading || !phone.trim() || note.trim().length < 3 || !file) return;
+
+    if (file.size > MAX_BYTES) {
+      setError("حجم الصورة يجب أن يكون أقل من 5 ميجابايت.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
+    // 1) upload the screenshot
+    const fd = new FormData();
+    fd.append("file", file);
+    const up = await fetch("/api/uploads/payment-proof", { method: "POST", body: fd });
+    const upData = await up.json().catch(() => ({}));
+    if (!up.ok) {
+      setLoading(false);
+      setError(upData.error ?? "تعذّر رفع الصورة.");
+      return;
+    }
+
+    // 2) create the request with the returned key
     const res = await fetch("/api/code-orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId, studentPhone: phone, paymentNote: note }),
+      body: JSON.stringify({
+        courseId,
+        studentPhone: phone,
+        paymentNote: note,
+        paymentProofKey: upData.key,
+      }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -71,7 +102,7 @@ export function RequestAccessForm({
         اطلب كودًا للكورس
       </div>
       <p className="mb-3 text-xs text-slate-400">
-        حوّل قيمة الكورس ثم أرسل لنا رقمك وبيانات التحويل، وسنفعّل الكورس بعد
+        حوّل قيمة الكورس، ثم أرفق صورة التحويل وأرسل رقمك — وسنفعّل الكورس بعد
         التأكد.
       </p>
 
@@ -93,15 +124,30 @@ export function RequestAccessForm({
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 500))}
-          rows={3}
-          placeholder="طريقة الدفع ورقم عملية التحويل (مثال: فودافون كاش، عملية رقم 8842، من رقم 010...)"
+          rows={2}
+          placeholder="طريقة الدفع ورقم عملية التحويل"
           className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white placeholder:text-slate-600 focus:border-gold-400 focus:outline-none"
         />
+
+        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-white/20 bg-navy-950 px-3 py-2.5 text-sm text-slate-300 transition hover:border-gold-400/40">
+          <ImageUp size={16} className="shrink-0 text-gold-400" />
+          <span className="truncate">{fileName ?? "أرفق صورة إثبات التحويل"}</span>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => {
+              setFileName(e.target.files?.[0]?.name ?? null);
+              setError(null);
+            }}
+            className="hidden"
+          />
+        </label>
       </div>
 
       <button
         type="submit"
-        disabled={loading || !phone.trim() || note.trim().length < 3}
+        disabled={!canSubmit}
         className="mt-3 rounded-lg bg-gold-400 px-5 py-2.5 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
       >
         {loading ? "جارٍ الإرسال..." : "إرسال الطلب"}
