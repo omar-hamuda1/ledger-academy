@@ -2,6 +2,8 @@
 
 Last updated: 2026-09-07 (Stripe removed → code-based access; payment-proof upload; admin→student broadcast notifications. See section 3.)
 
+> **Deployed to Vercel as private staging: https://ledger-academy-liart.vercel.app** (commit `e6cd486`, region `fra1`, prod Neon branch). All storage + Upstash env vars now set. See **`HANDOFF-2026-09-07.md`** for deployment state, credentials, env-var status, and the prioritized next-steps list — the live end-to-end payment-proof smoke test is the next task.
+
 ## 1. Architecture & Tech Stack
 
 - **Framework**: Next.js 16 (App Router) + TypeScript, React 19
