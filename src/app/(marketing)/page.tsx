@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ArrowLeft,
   PlayCircle,
+  Play,
   Mail,
   Phone,
   User,
@@ -127,7 +128,7 @@ export default async function LandingPage() {
     { icon: Award, target: settings.satisfactionRate, suffix: "%", label: "نسبة رضا الطلاب" },
   ];
 
-  const preview = courses[0];
+  const preview = courses.find((c) => c.modules.length > 0) ?? null;
   const previewMeta = preview ? courseMeta(preview.modules) : null;
 
   return (
@@ -154,17 +155,17 @@ export default async function LandingPage() {
               تفهم بعمق — على يد المحاضر <strong className="font-bold text-white">محمد حسين</strong>.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <a
                 href="#courses"
-                className="flex items-center gap-2 rounded-control bg-gold-400 px-6 py-3 font-bold text-navy-950 transition hover:bg-gold-300"
+                className="flex items-center justify-center gap-2 rounded-control bg-gold-400 px-6 py-3 font-bold text-navy-950 transition hover:bg-gold-300"
               >
                 ابدأ رحلتك الآن
                 <ArrowLeft size={18} />
               </a>
               <a
                 href="#courses"
-                className="flex items-center gap-2 rounded-control border border-white/20 px-6 py-3 font-bold text-white transition hover:border-blue-400 hover:text-blue-300"
+                className="flex items-center justify-center gap-2 rounded-control border border-white/20 px-6 py-3 font-bold text-white transition hover:border-blue-400 hover:text-blue-300"
               >
                 <PlayCircle size={18} />
                 شاهد درسًا تجريبيًا
@@ -189,8 +190,8 @@ export default async function LandingPage() {
             <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-tr from-gold-400/20 via-blue-500/12 to-transparent blur-2xl" />
             <div className="relative rounded-card border border-white/10 bg-navy-900 p-4 shadow-elevated">
               <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-navy-800 to-navy-900">
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gold-400/90 text-navy-950">
-                  <PlayCircle size={30} className="fill-navy-950" />
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gold-400/90">
+                  <Play size={26} className="translate-x-[1px] fill-navy-950 text-navy-950" />
                 </span>
                 <span className="absolute bottom-2.5 right-3 rounded bg-navy-950/60 px-2.5 py-1 text-[11px] font-bold text-slate-200">
                   ١٢:٣٤ / ١٨:٤٠
@@ -206,26 +207,26 @@ export default async function LandingPage() {
               </div>
               <div className="mt-2 flex flex-col gap-1.5">
                 <div className="flex items-center gap-2.5 rounded-control bg-white/[0.03] px-2.5 py-2">
-                  <CheckCircle2 size={16} className="text-emerald-400" />
+                  <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
                   <span className="text-[13px] text-slate-300">مقدمة عن علم الإدارة</span>
                 </div>
                 <div className="flex items-center gap-2.5 rounded-control border border-gold-400/20 bg-gold-400/[0.06] px-2.5 py-2">
-                  <PlayCircle size={16} className="text-gold-400" />
+                  <PlayCircle size={16} className="shrink-0 text-gold-400" />
                   <span className="text-[13px] font-semibold text-white">وظائف المدير الأساسية</span>
                 </div>
                 <div className="flex items-center gap-2.5 rounded-control bg-white/[0.03] px-2.5 py-2">
-                  <ClipboardCheck size={16} className="text-slate-500" />
+                  <ClipboardCheck size={16} className="shrink-0 text-slate-500" />
                   <span className="text-[13px] text-slate-400">اختبار الوحدة الأولى</span>
                 </div>
               </div>
-            </div>
-            <div className="absolute bottom-7 right-[-1.75rem] flex items-center gap-2.5 rounded-card border border-white/10 bg-navy-900 px-4 py-3 shadow-glow-gold">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-gold-400/30 bg-navy-800 text-slate-300">
-                <User size={18} />
-              </span>
-              <div>
-                <p className="text-[13px] font-bold text-white">محمد حسين</p>
-                <p className="text-[11px] text-slate-400">محاضر إدارة الأعمال</p>
+              <div className="mt-3 flex items-center gap-2.5 border-t border-white/[0.06] px-2 pt-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-gold-400/30 bg-navy-800 text-slate-300">
+                  <User size={16} />
+                </span>
+                <div>
+                  <p className="text-[13px] font-bold text-white">محمد حسين</p>
+                  <p className="text-[11px] text-slate-400">محاضر إدارة الأعمال</p>
+                </div>
               </div>
             </div>
           </div>
