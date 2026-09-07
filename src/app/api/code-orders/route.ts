@@ -6,6 +6,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createCodeOrderSchema } from "@/lib/validators/code-orders";
 import { paymentProofPrefix } from "@/lib/storage";
 import { notify } from "@/lib/notify";
+import { sendEmail, resolveAdminAlertEmails } from "@/lib/email";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -81,14 +82,38 @@ export async function POST(req: Request) {
 
   const admins = await db.user.findMany({
     where: { role: "ADMIN" },
-    select: { id: true },
+    select: { id: true, email: true },
   });
+  const studentName = session.user.name ?? "طالب";
   await notify({
     userId: admins.map((a) => a.id),
     title: "طلب كود جديد",
-    body: `${session.user.name ?? "طالب"} طلب كودًا لكورس «${course.title}».`,
+    body: `${studentName} طلب كودًا لكورس «${course.title}».`,
     href: "/dashboard/admin/code-orders",
   });
+
+  // Best-effort email alert — must never break the student's request.
+  try {
+    const to = resolveAdminAlertEmails(
+      admins.map((a) => a.email).filter((e): e is string => Boolean(e)),
+    );
+    if (to.length > 0) {
+      const dashboardUrl = `${process.env.NEXTAUTH_URL ?? ""}/dashboard/admin/code-orders`;
+      await sendEmail({
+        to,
+        subject: `طلب كود جديد — ${course.title}`,
+        text:
+          `وصل طلب جديد لشراء كورس على منصة Ledger Academy.\n\n` +
+          `الكورس: ${course.title}\n` +
+          `الطالب: ${studentName}\n` +
+          `رقم الهاتف: ${studentPhone}\n` +
+          `ملاحظة الدفع: ${paymentNote}\n\n` +
+          `راجع الطلب ووافق عليه من لوحة التحكم:\n${dashboardUrl}`,
+      });
+    }
+  } catch (err) {
+    console.error("[code-orders] admin alert email failed", err);
+  }
 
   return NextResponse.json({ order }, { status: 201 });
 }
