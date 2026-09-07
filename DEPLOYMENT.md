@@ -63,9 +63,16 @@ Do **not** set `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, or anything from
 
 ### 4. Make it private
 
-**Project → Settings → Deployment Protection** → enable **Vercel
-Authentication** (only your Vercel account can view) or set a password. Keep
-this on until launch.
+Vercel Hobby can't password-protect *production* deployments, so the app has a
+built-in gate: set a **`STAGING_PASSWORD`** env var (any value) on Vercel. While
+it's set, every route serves an Arabic password page (API routes → 401 JSON)
+until a visitor submits the password once — it's then stored in an httpOnly
+cookie for 30 days — and all responses carry `X-Robots-Tag: noindex`. Unset the
+var (and redeploy) to open the site for launch. Implemented in `src/middleware.ts`
+(`stagingGate`); unlock form posts to `/staging-unlock`.
+
+(If you're on Vercel Pro, **Settings → Deployment Protection → Vercel
+Authentication** is an alternative and you can skip `STAGING_PASSWORD`.)
 
 ### 5. Deploy
 
