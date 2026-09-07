@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Check, Ticket } from "lucide-react";
+import { Copy, Check, Ticket, Trash2 } from "lucide-react";
 import { formatCode } from "@/lib/prepaid-codes";
 
 export type PrepaidCodeRow = {
@@ -19,7 +20,9 @@ export type PrepaidCodeRow = {
 const dateFmt = new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium" });
 
 export function PrepaidCodesTable({ rows }: { rows: PrepaidCodeRow[] }) {
+  const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function copy(row: PrepaidCodeRow) {
     try {
@@ -28,6 +31,23 @@ export function PrepaidCodesTable({ rows }: { rows: PrepaidCodeRow[] }) {
       setTimeout(() => setCopiedId((id) => (id === row.id ? null : id)), 1500);
     } catch {
       toast.error("تعذّر النسخ.");
+    }
+  }
+
+  async function remove(row: PrepaidCodeRow) {
+    if (!confirm(`حذف الكود ${formatCode(row.code)}؟ لا يمكن التراجع.`)) return;
+    setDeletingId(row.id);
+    try {
+      const res = await fetch(`/api/prepaid-codes/${row.id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("تم حذف الكود.");
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? "تعذّر حذف الكود.");
+      }
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -50,6 +70,7 @@ export function PrepaidCodesTable({ rows }: { rows: PrepaidCodeRow[] }) {
             <th className="px-4 py-3 font-semibold">الحالة</th>
             <th className="px-4 py-3 font-semibold">استخدمه</th>
             <th className="px-4 py-3 font-semibold">تاريخ الإنشاء</th>
+            <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody>
@@ -100,6 +121,19 @@ export function PrepaidCodesTable({ rows }: { rows: PrepaidCodeRow[] }) {
               </td>
               <td className="px-4 py-3 text-slate-400">
                 {dateFmt.format(row.createdAt)}
+              </td>
+              <td className="px-4 py-3">
+                {!row.isUsed && (
+                  <button
+                    type="button"
+                    onClick={() => remove(row)}
+                    disabled={deletingId === row.id}
+                    aria-label="حذف الكود"
+                    className="text-slate-500 transition hover:text-red-400 disabled:opacity-40"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </td>
             </tr>
           ))}

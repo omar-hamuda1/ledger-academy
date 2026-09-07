@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import { db } from "@/lib/db";
 import { Pagination } from "@/components/admin/Pagination";
 import { GeneratePrepaidCodesForm } from "@/components/admin/GeneratePrepaidCodesForm";
@@ -50,6 +51,11 @@ export default async function AdminPrepaidCodesPage({
   ]);
   const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE));
 
+  const exportParams = new URLSearchParams();
+  if (courseFilter) exportParams.set("courseId", courseFilter);
+  if (statusFilter) exportParams.set("status", statusFilter);
+  const exportHref = `/api/prepaid-codes/export${exportParams.toString() ? `?${exportParams}` : ""}`;
+
   const rows: PrepaidCodeRow[] = codes.map((c) => ({
     id: c.id,
     code: c.code,
@@ -90,12 +96,21 @@ export default async function AdminPrepaidCodesPage({
         ))}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <PrepaidCodesFilters
           courses={courses}
           courseId={courseFilter}
           status={statusFilter}
         />
+        {filteredCount > 0 && (
+          <a
+            href={exportHref}
+            className="inline-flex items-center gap-2 rounded-control border border-white/15 px-3 py-2 text-sm text-slate-300 transition hover:border-gold-400/40 hover:text-gold-400"
+          >
+            <Download size={15} />
+            تصدير CSV
+          </a>
+        )}
       </div>
 
       <div className="mt-4">
