@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -7,6 +7,7 @@ import { createCodeOrderSchema } from "@/lib/validators/code-orders";
 import { paymentProofPrefix } from "@/lib/storage";
 import { notify } from "@/lib/notify";
 import { sendEmail, resolveAdminAlertEmails } from "@/lib/email";
+import { sendTelegram } from "@/lib/telegram";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -92,28 +93,35 @@ export async function POST(req: Request) {
     href: "/dashboard/admin/code-orders",
   });
 
-  // Best-effort email alert — must never break the student's request.
-  try {
-    const to = resolveAdminAlertEmails(
-      admins.map((a) => a.email).filter((e): e is string => Boolean(e)),
-    );
-    if (to.length > 0) {
-      const dashboardUrl = `${process.env.NEXTAUTH_URL ?? ""}/dashboard/admin/code-orders`;
-      await sendEmail({
-        to,
-        subject: `طلب كود جديد — ${course.title}`,
-        text:
-          `وصل طلب جديد لشراء كورس على منصة Ledger Academy.\n\n` +
-          `الكورس: ${course.title}\n` +
-          `الطالب: ${studentName}\n` +
-          `رقم الهاتف: ${studentPhone}\n` +
-          `ملاحظة الدفع: ${paymentNote}\n\n` +
-          `راجع الطلب ووافق عليه من لوحة التحكم:\n${dashboardUrl}`,
-      });
-    }
-  } catch (err) {
-    console.error("[code-orders] admin alert email failed", err);
-  }
+  // Out-of-app alerts (email + Telegram) run after the response so they never
+  // add latency to — or fail — the student's request. Both are best-effort and
+  // no-op (console log) until their env vars are set.
+  const dashboardUrl = `${process.env.NEXTAUTH_URL ?? ""}/dashboard/admin/code-orders`;
+  const alertText =
+    `طلب كود جديد على منصة Ledger Academy.\n\n` +
+    `الكورس: ${course.title}\n` +
+    `الطالب: ${studentName}\n` +
+    `رقم الهاتف: ${studentPhone}\n` +
+    `ملاحظة الدفع: ${paymentNote}\n\n` +
+    `راجع الطلب ووافق عليه:\n${dashboardUrl}`;
+  const adminEmails = resolveAdminAlertEmails(
+    admins.map((a) => a.email).filter((e): e is string => Boolean(e)),
+  );
+
+  after(async () => {
+    await Promise.allSettled([
+      adminEmails.length > 0
+        ? sendEmail({ to: adminEmails, subject: `طلب كود جديد — ${course.title}`, text: alertText })
+        : Promise.resolve(),
+      sendTelegram(alertText),
+    ]).then((results) => {
+      for (const [i, r] of results.entries()) {
+        if (r.status === "rejected") {
+          console.error(`[code-orders] ${i === 0 ? "email" : "telegram"} alert failed`, r.reason);
+        }
+      }
+    });
+  });
 
   return NextResponse.json({ order }, { status: 201 });
 }
