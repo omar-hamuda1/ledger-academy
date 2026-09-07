@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { updateUserSchema } from "@/lib/validators/users";
 import { logAudit } from "@/lib/audit";
 
-// Admin manages another account: promote/demote between ADMIN and STUDENT, or
-// disable/enable it (a disabled account can't log in — see src/lib/auth.ts).
-// Guards: an admin can't act on their own row here, and the platform must
-// always keep at least one active ADMIN.
+// Admin manages another account: promote/demote between ADMIN and STUDENT,
+// disable/enable it (a disabled account can't log in — see src/lib/auth.ts),
+// or reset its password (email-based reset isn't live yet). Guards: an admin
+// can't act on their own row here, and the platform must always keep at least
+// one active ADMIN.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
@@ -60,6 +63,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       metadata: { from: target.role, to: parsed.data.role },
     });
     return NextResponse.json({ user });
+  }
+
+  if (parsed.data.action === "setPassword") {
+    // Admin-supplied password if given, otherwise a random temporary one the
+    // admin relays to the user out of band. The plaintext is returned once in
+    // this response and never logged.
+    const password = parsed.data.password ?? randomBytes(9).toString("base64url");
+    await db.user.update({ where: { id }, data: { passwordHash: await bcrypt.hash(password, 10) } });
+    await logAudit({
+      actorId: admin.id,
+      actorEmail: admin.email ?? "unknown",
+      action: "user.password_reset",
+      targetType: "User",
+      targetId: id,
+      metadata: { generated: !parsed.data.password },
+    });
+    return NextResponse.json({ password });
   }
 
   // setDisabled

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from "vites
 
 vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
 
+import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { db } from "@/lib/db";
 import { PATCH } from "@/app/api/users/[id]/route";
@@ -58,6 +59,29 @@ describe("PATCH /api/users/[id]", () => {
     const on = await call(other.id, { action: "setDisabled", disabled: false });
     expect(on.status).toBe(200);
     expect((await db.user.findUnique({ where: { id: other.id } }))!.disabledAt).toBeNull();
+  });
+
+  it("resets a password: generated one is returned and actually works", async () => {
+    const res = await call(other.id, { action: "setPassword" });
+    expect(res.status).toBe(200);
+    const { password } = await res.json();
+    expect(typeof password).toBe("string");
+    expect(password.length).toBeGreaterThanOrEqual(8);
+    const hash = (await db.user.findUnique({ where: { id: other.id } }))!.passwordHash!;
+    expect(await bcrypt.compare(password, hash)).toBe(true);
+  });
+
+  it("resets a password to an admin-supplied value", async () => {
+    const res = await call(other.id, { action: "setPassword", password: "chosen-pass-123" });
+    expect(res.status).toBe(200);
+    expect((await res.json()).password).toBe("chosen-pass-123");
+    const hash = (await db.user.findUnique({ where: { id: other.id } }))!.passwordHash!;
+    expect(await bcrypt.compare("chosen-pass-123", hash)).toBe(true);
+  });
+
+  it("rejects a too-short supplied password (400)", async () => {
+    const res = await call(other.id, { action: "setPassword", password: "short" });
+    expect(res.status).toBe(400);
   });
 
   it("refuses to demote the last active admin (409)", async () => {
