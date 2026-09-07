@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, TrendingUp, Users, Banknote, Ticket, Inbox } from "lucide-react";
+import { BookOpen, TrendingUp, Users, Banknote, Ticket, Inbox, BellRing } from "lucide-react";
 import { getAdminMetrics } from "@/lib/admin-metrics";
 import { AdminStatCards } from "@/components/admin/AdminStatCards";
 import { AdminCharts } from "@/components/admin/AdminCharts";
@@ -49,6 +49,12 @@ export default async function AdminDashboardPage() {
         metrics.pendingCodeOrders > 0
           ? `${metrics.pendingCodeOrders.toLocaleString("ar-EG")} طلب بانتظار المراجعة.`
           : "راجع طلبات الطلاب لشراء أكواد الكورسات المدفوعة.",
+    },
+    {
+      href: "/dashboard/admin/notifications",
+      icon: BellRing,
+      title: "إدارة الإشعارات",
+      description: "أرسل إشعارًا يظهر لكل الطلاب في جرس الإشعارات.",
     },
   ];
 

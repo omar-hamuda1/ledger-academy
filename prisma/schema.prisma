@@ -16,14 +16,16 @@ model User {
   avatarUrl    String?
   createdAt    DateTime @default(now())
 
-  enrollments        Enrollment[]
-  progress           LessonProgress[]
-  quizAttempts       QuizAttempt[]
-  coursesOwned       Course[]         @relation("InstructorCourses")
-  redeemedCodes      PrepaidCode[]
-  codeOrders         CodeOrder[]      @relation("RequestedCodeOrders")
-  reviewedCodeOrders CodeOrder[]      @relation("ReviewedCodeOrders")
-  notifications      Notification[]
+  enrollments           Enrollment[]
+  progress              LessonProgress[]
+  quizAttempts          QuizAttempt[]
+  coursesOwned          Course[]           @relation("InstructorCourses")
+  redeemedCodes         PrepaidCode[]
+  codeOrders            CodeOrder[]        @relation("RequestedCodeOrders")
+  reviewedCodeOrders    CodeOrder[]        @relation("ReviewedCodeOrders")
+  notificationsTargeted Notification[]     @relation("NotificationTarget")
+  notificationsAuthored Notification[]     @relation("NotificationAuthor")
+  notificationReads     NotificationRead[]
 }
 
 enum Role {
@@ -160,21 +162,38 @@ enum CodeOrderStatus {
   REJECTED
 }
 
-// A per-user in-app notification (bell menu in the dashboard header). Written
-// best-effort by src/lib/notify.ts — currently on CodeOrder approve/reject
-// (to the student) and CodeOrder create (to admins).
+// In-app notification shown in the dashboard header bell.
+//  - `targetUserId` set  -> delivered to that one user (system events:
+//    CodeOrder approve/reject to the student, new request to admins).
+//  - `targetUserId` null -> broadcast, visible to every STUDENT (admin
+//    composes these at /dashboard/admin/notifications).
+// Read state lives in NotificationRead (a row per user who has seen it), so a
+// broadcast is one row regardless of student count.
 model Notification {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  title     String
-  body      String
-  href      String?
-  readAt    DateTime?
-  createdAt DateTime  @default(now())
+  id           String             @id @default(cuid())
+  title        String
+  body         String
+  href         String?
+  targetUserId String?
+  targetUser   User?              @relation("NotificationTarget", fields: [targetUserId], references: [id])
+  createdById  String?
+  createdBy    User?              @relation("NotificationAuthor", fields: [createdById], references: [id])
+  createdAt    DateTime           @default(now())
+  reads        NotificationRead[]
 
-  @@index([userId, createdAt])
-  @@index([userId, readAt])
+  @@index([targetUserId, createdAt])
+  @@index([createdAt])
+}
+
+model NotificationRead {
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  readAt         DateTime     @default(now())
+
+  @@id([notificationId, userId])
+  @@index([userId])
 }
 
 model OtpCode {

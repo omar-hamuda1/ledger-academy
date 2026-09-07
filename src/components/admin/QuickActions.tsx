@@ -12,6 +12,7 @@ import {
   History,
   Ticket,
   Inbox,
+  BellRing,
 } from "lucide-react";
 
 const ACTIONS = [
@@ -19,6 +20,7 @@ const ACTIONS = [
   { href: "/dashboard/admin/lessons", label: "إضافة درس أو وحدة", icon: BookOpen },
   { href: "/dashboard/admin/prepaid-codes", label: "إنشاء أكواد كورسات", icon: Ticket },
   { href: "/dashboard/admin/code-orders", label: "طلبات الأكواد", icon: Inbox },
+  { href: "/dashboard/admin/notifications", label: "إرسال إشعار للطلاب", icon: BellRing },
   { href: "/dashboard/admin/settings", label: "الإعدادات العامة", icon: Settings },
   { href: "/dashboard/admin/audit", label: "سجل النشاط", icon: History },
 ] as const;

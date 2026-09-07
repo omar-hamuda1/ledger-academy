@@ -1,6 +1,6 @@
 # Project State — Ledger Academy
 
-Last updated: 2026-09-07 (Stripe removed; access is now code-based — prepaid codes + a code-purchase request queue. See section 3.)
+Last updated: 2026-09-07 (Stripe removed → code-based access; payment-proof upload; admin→student broadcast notifications. See section 3.)
 
 ## 1. Architecture & Tech Stack
 
@@ -94,8 +94,17 @@ Last updated: 2026-09-07 (Stripe removed; access is now code-based — prepaid c
   - **Screenshot upload + notifications (2026-09-07, same day)**: the request now **requires a payment-proof screenshot** and both sides get in-app notifications.
     - **Storage**: Neon Object Storage (S3-compatible, enabled on the project, `eu-central-1`). Private bucket `payment-proofs` declared in `neon.ts` (`preview.buckets`). `src/lib/storage.ts` → `paymentProofStore` (a `files-sdk` `Files` instance or `null` when `AWS_*` env vars absent — nullable-client pattern). **Needs `neon deploy` to provision + `neon env pull` for the S3 creds.** Packages added: `files-sdk`, `@aws-sdk/client-s3`, `@aws-sdk/s3-presigned-post`, `@aws-sdk/s3-request-presigner`.
     - **Flow**: `RequestAccessForm` uploads the image → `POST /api/uploads/payment-proof` (image only, ≤5MB, rate-limited) returns `proofs/<userId>/<uuid>.<ext>` → `POST /api/code-orders` with `paymentProofKey` (rejects any key not under the caller's own prefix). `CodeOrder.paymentProofKey String?` added. Admin table shows each screenshot as a thumbnail via a 1h presigned GET URL generated server-side (plain `<img>`, not `next/image`).
-    - **Notifications**: new `Notification` model + `src/lib/notify.ts` (`notify()`, best-effort like `logAudit`). `NotificationBell` in the dashboard header (both roles) — bell + unread badge, dropdown list, polls `GET /api/notifications` every 60s + on focus, `POST /api/notifications/read` (`{id}` / `{all:true}`). Fired: student on approve (with their code) / reject (with reason); all admins on a new request. No email (SendGrid inactive).
-    - **Verification 2026-09-07**: `tsc` + `eslint` + `next build` clean. **`prisma db push` (both branches) + `neon deploy` + `neon env pull` still pending** — full test run and live upload/notification behaviour unverified until then.
+    - **Notifications (v1, superseded same day — see next entry)**: introduced a per-user `Notification` model + `NotificationBell`. Reworked hours later into the broadcast model below.
+    - **Verification 2026-09-07**: `tsc` + `eslint` + `next build` clean.
+
+- **Notification system — broadcast + `NotificationRead` (2026-09-07)**: the admin can now compose a message to all students; the per-user model from earlier the same day was unified into one that handles both.
+  - **Schema** (needs `prisma db push --accept-data-loss` on **both branches** — the old `Notification.userId`/`readAt` change; ~3 throwaway test rows are dropped): `Notification { id, title, body, href?, targetUserId?, createdById?, createdAt }` — `targetUserId` **set** = one recipient (system events), **null** = broadcast to every `STUDENT`, one row regardless of student count. New `NotificationRead { notificationId, userId, readAt }` (composite PK, `onDelete: Cascade`) is the only read-state store — no flag on `Notification`.
+  - **`src/lib/notify.ts`**: `notify({ userId | userId[], ... })` (targeted, best-effort) unchanged for callers; new `broadcastToStudents({ title, body, createdById })`. `src/lib/notifications.ts` `visibleNotificationsWhere(userId, role)` — shared "what can this user see" filter (own targeted + broadcasts if student).
+  - **API**: `POST /api/notifications` (admin) composes a broadcast, audit-logged `notification.broadcast`. `GET /api/notifications` returns the caller's visible notifications (newest 20) each with a per-user `read` flag + `unreadCount`. `POST /api/notifications/read` (`{id}` / `{all:true}`) creates `NotificationRead` rows only for notifications the caller can see.
+  - **Admin UI**: `/dashboard/admin/notifications` (sidebar "إدارة الإشعارات", overview card, Quick Actions) — `ComposeNotificationForm` (title + message) + a list of sent broadcasts with an "X / Y قرأوه" read count.
+  - **Student UI**: `NotificationBell` reworked onto shadcn `Popover` (`npx shadcn add popover` — checked, did **not** touch globals.css) — bell + unread badge in the dashboard header, RTL dropdown, per-item + mark-all read, 60s poll + focus refetch.
+  - Not real-time push (SSE/WebSocket) — deliberate, serverless target with no deployment yet; 60s polling + focus refetch is the near-real-time stand-in.
+  - **Verification 2026-09-07**: `tsc` + `eslint` + `next build` clean. Tests written (`tests/api/notifications.test.ts`, 3 cases) but **unrun pending `prisma db push` on both branches**; `neon deploy` + `neon env pull` (for the payment-proof bucket from the previous feature) also still pending.
 
 ## 4. Pending / Known Gaps
 

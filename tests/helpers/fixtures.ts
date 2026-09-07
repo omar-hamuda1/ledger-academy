@@ -95,7 +95,10 @@ export async function cleanupCourse(courseId: string) {
 
 export async function cleanupUser(userId: string) {
   await db.auditLog.deleteMany({ where: { actorId: userId } });
-  await db.notification.deleteMany({ where: { userId } });
+  await db.notificationRead.deleteMany({ where: { userId } });
+  await db.notification.deleteMany({
+    where: { OR: [{ targetUserId: userId }, { createdById: userId }] },
+  });
   await db.codeOrder.deleteMany({
     where: { OR: [{ userId }, { reviewedById: userId }] },
   });

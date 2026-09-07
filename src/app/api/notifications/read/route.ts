@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { visibleNotificationsWhere } from "@/lib/notifications";
 
 const schema = z.union([
   z.object({ id: z.string().min(1) }),
@@ -12,7 +13,8 @@ const schema = z.union([
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  if (!userId) {
+  const role = session?.user?.role;
+  if (!userId || !role) {
     return NextResponse.json({ error: "يجب تسجيل الدخول أولًا." }, { status: 401 });
   }
 
@@ -22,15 +24,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
   }
 
-  // `userId` in the filter scopes the write to the caller's own rows.
-  await db.notification.updateMany({
+  const where = visibleNotificationsWhere(userId, role);
+
+  // Only mark notifications the caller can actually see, and only ones not
+  // already read (skipDuplicates guards the composite PK).
+  const targets = await db.notification.findMany({
     where: {
-      userId,
-      readAt: null,
+      ...where,
+      reads: { none: { userId } },
       ...("id" in parsed.data ? { id: parsed.data.id } : {}),
     },
-    data: { readAt: new Date() },
+    select: { id: true },
   });
 
-  return NextResponse.json({ ok: true });
+  if (targets.length > 0) {
+    await db.notificationRead.createMany({
+      data: targets.map((n) => ({ notificationId: n.id, userId })),
+      skipDuplicates: true,
+    });
+  }
+
+  return NextResponse.json({ ok: true, marked: targets.length });
 }

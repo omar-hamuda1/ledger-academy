@@ -152,7 +152,7 @@ describe("code orders", () => {
     });
     expect(enrollment).not.toBeNull();
 
-    const note = await db.notification.findFirst({ where: { userId: buyer.id } });
+    const note = await db.notification.findFirst({ where: { targetUserId: buyer.id } });
     expect(note?.title).toContain("تفعيل");
 
     const again = await reviewOrder(reviewReq({ action: "approve" }), {
@@ -183,7 +183,7 @@ describe("code orders", () => {
     });
     expect(enrollment).toBeNull();
 
-    const note = await db.notification.findFirst({ where: { userId: buyer.id } });
+    const note = await db.notification.findFirst({ where: { targetUserId: buyer.id } });
     expect(note?.title).toContain("رفض");
 
     await cleanupUser(buyer.id);

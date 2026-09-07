@@ -19,6 +19,7 @@ import {
   History,
   Ticket,
   Inbox,
+  BellRing,
 } from "lucide-react";
 import { SignOutButton } from "./SignOutButton";
 import { NotificationBell } from "./NotificationBell";
@@ -34,6 +35,7 @@ const navConfig = {
       { href: "/dashboard/admin/users", label: "الطلاب والمستخدمون", icon: Users },
       { href: "/dashboard/admin/prepaid-codes", label: "أكواد الكورسات", icon: Ticket },
       { href: "/dashboard/admin/code-orders", label: "طلبات الأكواد", icon: Inbox },
+      { href: "/dashboard/admin/notifications", label: "إدارة الإشعارات", icon: BellRing },
       { href: "/dashboard/admin/settings", label: "الإعدادات العامة", icon: Settings },
       { href: "/dashboard/admin/audit", label: "سجل النشاط", icon: History },
     ],
