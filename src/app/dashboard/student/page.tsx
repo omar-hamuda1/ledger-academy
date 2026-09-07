@@ -38,13 +38,21 @@ export default async function StudentHomePage() {
     enrollment.course.modules.flatMap((module) => module.lessons.map((lesson) => lesson.id))
   );
 
-  const [completedProgress, quizAttempts] = await Promise.all([
+  const [completedProgress, quizAttempts, codeOrders] = await Promise.all([
     userId
       ? db.lessonProgress.findMany({
           where: { userId, lessonId: { in: allLessonIds }, completed: true },
         })
       : Promise.resolve([]),
     userId ? db.quizAttempt.findMany({ where: { userId } }) : Promise.resolve([]),
+    userId
+      ? db.codeOrder.findMany({
+          where: { userId },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+          include: { course: { select: { title: true, slug: true } } },
+        })
+      : Promise.resolve([]),
   ]);
   const completedLessonIds = new Set(completedProgress.map((p) => p.lessonId));
 
@@ -141,6 +149,43 @@ export default async function StudentHomePage() {
         </div>
       ) : (
         <StudentCourseList courses={courses} />
+      )}
+
+      {codeOrders.length > 0 && (
+        <div className="mt-8">
+          <h2 className="mb-3 text-lg font-bold text-white">طلبات الأكواد</h2>
+          <ul className="space-y-2">
+            {codeOrders.map((order) => {
+              const badge =
+                order.status === "APPROVED"
+                  ? { text: "تمت الموافقة — الكورس مُفعّل", cls: "bg-emerald-400/10 text-emerald-400" }
+                  : order.status === "REJECTED"
+                    ? { text: "مرفوض", cls: "bg-red-500/10 text-red-400" }
+                    : { text: "قيد المراجعة", cls: "bg-gold-400/10 text-gold-400" };
+              return (
+                <li
+                  key={order.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-white/10 bg-navy-900/60 px-4 py-3 text-sm shadow-card"
+                >
+                  <div>
+                    <Link
+                      href={`/courses/${order.course.slug}`}
+                      className="font-medium text-white hover:text-gold-400"
+                    >
+                      {order.course.title}
+                    </Link>
+                    {order.status === "REJECTED" && order.rejectionReason && (
+                      <p className="mt-0.5 text-xs text-red-400">{order.rejectionReason}</p>
+                    )}
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badge.cls}`}>
+                    {badge.text}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       <div className="mt-8 max-w-md">

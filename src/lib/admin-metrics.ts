@@ -38,6 +38,7 @@ export type AdminMetrics = {
   avgQuizScore: number;
   newStudentsThisWeek: number;
   enrollmentsThisWeek: number;
+  pendingCodeOrders: number;
   weeklyActivity: WeeklyActivityPoint[];
   coursePopularity: CoursePopularityPoint[];
 };
@@ -72,6 +73,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     quizPassCount,
     newStudentsThisWeek,
     enrollmentsThisWeek,
+    pendingCodeOrders,
     recentEnrollments,
     recentCompletions,
     courses,
@@ -86,6 +88,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     db.quizAttempt.count({ where: { score: { gte: 50 } } }),
     db.user.count({ where: { role: "STUDENT", createdAt: { gte: oneWeekAgo } } }),
     db.enrollment.count({ where: { enrolledAt: { gte: oneWeekAgo } } }),
+    db.codeOrder.count({ where: { status: "PENDING" } }),
     db.enrollment.findMany({
       where: { enrolledAt: { gte: firstWeekStart } },
       select: { enrolledAt: true },
@@ -131,6 +134,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     avgQuizScore: Math.round(quizAgg._avg.score ?? 0),
     newStudentsThisWeek,
     enrollmentsThisWeek,
+    pendingCodeOrders,
     weeklyActivity: buckets,
     coursePopularity: courses.map((c) => ({
       title: c.title,

@@ -58,6 +58,17 @@ export async function createPrepaidCode(courseId: string, code?: string) {
   });
 }
 
+export async function createCodeOrder(userId: string, courseId: string) {
+  return db.codeOrder.create({
+    data: {
+      userId,
+      courseId,
+      studentPhone: "01000000000",
+      paymentNote: "Vodafone Cash #test",
+    },
+  });
+}
+
 export async function cleanupCourse(courseId: string) {
   const modules = await db.module.findMany({
     where: { courseId },
@@ -76,11 +87,15 @@ export async function cleanupCourse(courseId: string) {
   }
   await db.module.deleteMany({ where: { courseId } });
   await db.enrollment.deleteMany({ where: { courseId } });
+  await db.codeOrder.deleteMany({ where: { courseId } });
   await db.prepaidCode.deleteMany({ where: { courseId } });
   await db.course.delete({ where: { id: courseId } }).catch(() => {});
 }
 
 export async function cleanupUser(userId: string) {
   await db.auditLog.deleteMany({ where: { actorId: userId } });
+  await db.codeOrder.deleteMany({
+    where: { OR: [{ userId }, { reviewedById: userId }] },
+  });
   await db.user.delete({ where: { id: userId } }).catch(() => {});
 }

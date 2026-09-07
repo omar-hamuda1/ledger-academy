@@ -8,6 +8,8 @@ import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
 import { LedgerFooter } from "@/components/ledger-academy/LedgerFooter";
 import { EnrollButton } from "@/components/course/EnrollButton";
 import { RedeemCodeForm } from "@/components/course/RedeemCodeForm";
+import { RequestAccessForm } from "@/components/course/RequestAccessForm";
+import { getSiteSettings } from "@/lib/site-settings";
 
 const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
@@ -34,6 +36,19 @@ export default async function CourseDetailPage({
       })
     : null;
 
+  const price = Number(course.price);
+  const showPaidAccess = !!userId && !enrollment && price > 0;
+
+  const [pendingOrder, settings] = showPaidAccess
+    ? await Promise.all([
+        db.codeOrder.findFirst({
+          where: { userId: userId!, courseId: course.id, status: "PENDING" },
+          select: { id: true },
+        }),
+        getSiteSettings(),
+      ])
+    : [null, null];
+
   const firstLesson = course.modules[0]?.lessons[0];
   const firstLessonHref = firstLesson
     ? `/dashboard/student/courses/${course.slug}/${firstLesson.id}`
@@ -59,9 +74,14 @@ export default async function CourseDetailPage({
           />
         </div>
 
-        {userId && !enrollment && (
-          <div className="mt-4 max-w-md">
+        {showPaidAccess && (
+          <div className="mt-4 grid max-w-3xl gap-4 sm:grid-cols-2">
             <RedeemCodeForm courseId={course.id} />
+            <RequestAccessForm
+              courseId={course.id}
+              pending={!!pendingOrder}
+              paymentInstructions={settings?.paymentInstructions ?? null}
+            />
           </div>
         )}
 

@@ -16,11 +16,13 @@ model User {
   avatarUrl    String?
   createdAt    DateTime @default(now())
 
-  enrollments   Enrollment[]
-  progress      LessonProgress[]
-  quizAttempts  QuizAttempt[]
-  coursesOwned  Course[]         @relation("InstructorCourses")
-  redeemedCodes PrepaidCode[]
+  enrollments        Enrollment[]
+  progress           LessonProgress[]
+  quizAttempts       QuizAttempt[]
+  coursesOwned       Course[]         @relation("InstructorCourses")
+  redeemedCodes      PrepaidCode[]
+  codeOrders         CodeOrder[]      @relation("RequestedCodeOrders")
+  reviewedCodeOrders CodeOrder[]      @relation("ReviewedCodeOrders")
 }
 
 enum Role {
@@ -44,6 +46,7 @@ model Course {
   modules      Module[]
   enrollments  Enrollment[]
   prepaidCodes PrepaidCode[]
+  codeOrders   CodeOrder[]
 }
 
 model Module {
@@ -105,18 +108,54 @@ enum EnrollmentStatus {
 // second (and only other) sanctioned enrollment-granting path besides
 // /api/checkout — see CLAUDE.md.
 model PrepaidCode {
-  id        String    @id @default(cuid())
-  code      String    @unique
+  id        String     @id @default(cuid())
+  code      String     @unique
   courseId  String
-  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  isUsed    Boolean   @default(false)
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  isUsed    Boolean    @default(false)
   usedById  String?
-  usedBy    User?     @relation(fields: [usedById], references: [id])
+  usedBy    User?      @relation(fields: [usedById], references: [id])
   usedAt    DateTime?
-  createdAt DateTime  @default(now())
+  createdAt DateTime   @default(now())
+  codeOrder CodeOrder?
 
   @@index([courseId])
   @@index([courseId, isUsed])
+}
+
+// A student's request to buy access to a paid course. Money is transferred
+// manually (Vodafone Cash / InstaPay / bank / cash) off-platform; the student
+// records how in `paymentNote`, the lecturer verifies it and approves.
+// Approving issues a used PrepaidCode for that student + creates the
+// Enrollment in one transaction (see /api/code-orders/[id]). This is the
+// second sanctioned enrollment path — see CLAUDE.md.
+model CodeOrder {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation("RequestedCodeOrders", fields: [userId], references: [id])
+  courseId        String
+  course          Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status          CodeOrderStatus @default(PENDING)
+  studentPhone    String
+  paymentNote     String
+  reviewedById    String?
+  reviewedBy      User?           @relation("ReviewedCodeOrders", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+  rejectionReason String?
+  prepaidCodeId   String?         @unique
+  prepaidCode     PrepaidCode?    @relation(fields: [prepaidCodeId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([userId])
+  @@index([courseId, status])
+}
+
+enum CodeOrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model OtpCode {
@@ -152,15 +191,16 @@ model AuditLog {
 }
 
 model SiteSettings {
-  id                 String  @id @default("main")
-  studentsCount      Int     @default(5000)
-  satisfactionRate   Int     @default(98)
-  contactEmail       String  @default("info@ledgeracademy.com")
-  contactPhone       String  @default("+20000000000")
-  showBreakEvenTool  Boolean @default(true)
-  showSwotTool       Boolean @default(true)
-  announcement       String?
-  announcementActive Boolean @default(false)
+  id                  String  @id @default("main")
+  studentsCount       Int     @default(5000)
+  satisfactionRate    Int     @default(98)
+  contactEmail        String  @default("info@ledgeracademy.com")
+  contactPhone        String  @default("+20000000000")
+  showBreakEvenTool   Boolean @default(true)
+  showSwotTool        Boolean @default(true)
+  announcement        String?
+  announcementActive  Boolean @default(false)
+  paymentInstructions String?
 }
 
 model LessonProgress {

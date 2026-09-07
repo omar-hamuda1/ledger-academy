@@ -13,4 +13,9 @@ export const updateSiteSettingsSchema = z.object({
     .max(500)
     .transform((v) => (v.length > 0 ? v : null)),
   announcementActive: z.boolean(),
+  paymentInstructions: z
+    .string()
+    .trim()
+    .max(1000)
+    .transform((v) => (v.length > 0 ? v : null)),
 });

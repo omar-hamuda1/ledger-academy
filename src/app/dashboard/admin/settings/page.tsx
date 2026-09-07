@@ -23,6 +23,7 @@ export default async function AdminSettingsPage() {
           initialShowSwotTool={settings.showSwotTool}
           initialAnnouncement={settings.announcement ?? ""}
           initialAnnouncementActive={settings.announcementActive}
+          initialPaymentInstructions={settings.paymentInstructions ?? ""}
         />
       </div>
     </div>

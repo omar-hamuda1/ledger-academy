@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, TrendingUp, Users, Banknote, Ticket } from "lucide-react";
+import { BookOpen, TrendingUp, Users, Banknote, Ticket, Inbox } from "lucide-react";
 import { getAdminMetrics } from "@/lib/admin-metrics";
 import { AdminStatCards } from "@/components/admin/AdminStatCards";
 import { AdminCharts } from "@/components/admin/AdminCharts";
@@ -7,41 +7,50 @@ import { QuickActions } from "@/components/admin/QuickActions";
 
 export const dynamic = "force-dynamic";
 
-const cards = [
-  {
-    href: "/dashboard/admin/courses",
-    icon: Banknote,
-    title: "إدارة الكورسات والأسعار",
-    description: "تحكم في سعر كل كورس بالجنيه المصري وحالة نشره.",
-  },
-  {
-    href: "/dashboard/admin/lessons",
-    icon: BookOpen,
-    title: "إدارة الدروس",
-    description: "أضف دروسًا جديدة وارفع الفيديوهات والملفات الخاصة بكل وحدة.",
-  },
-  {
-    href: "/dashboard/admin/progress",
-    icon: TrendingUp,
-    title: "تقدم الطلاب",
-    description: "تابع نسب إكمال الدروس ونتائج الاختبارات لكل طالب.",
-  },
-  {
-    href: "/dashboard/admin/users",
-    icon: Users,
-    title: "الطلاب والمستخدمون",
-    description: "استعرض جميع الحسابات المسجلة على المنصة وأدوارها.",
-  },
-  {
-    href: "/dashboard/admin/prepaid-codes",
-    icon: Ticket,
-    title: "أكواد الكورسات",
-    description: "أنشئ أكواد تفعيل مدفوعة مسبقًا وتابع المستخدَم منها.",
-  },
-];
-
 export default async function AdminDashboardPage() {
   const metrics = await getAdminMetrics();
+
+  const cards = [
+    {
+      href: "/dashboard/admin/courses",
+      icon: Banknote,
+      title: "إدارة الكورسات والأسعار",
+      description: "تحكم في سعر كل كورس بالجنيه المصري وحالة نشره.",
+    },
+    {
+      href: "/dashboard/admin/lessons",
+      icon: BookOpen,
+      title: "إدارة الدروس",
+      description: "أضف دروسًا جديدة وارفع الفيديوهات والملفات الخاصة بكل وحدة.",
+    },
+    {
+      href: "/dashboard/admin/progress",
+      icon: TrendingUp,
+      title: "تقدم الطلاب",
+      description: "تابع نسب إكمال الدروس ونتائج الاختبارات لكل طالب.",
+    },
+    {
+      href: "/dashboard/admin/users",
+      icon: Users,
+      title: "الطلاب والمستخدمون",
+      description: "استعرض جميع الحسابات المسجلة على المنصة وأدوارها.",
+    },
+    {
+      href: "/dashboard/admin/prepaid-codes",
+      icon: Ticket,
+      title: "أكواد الكورسات",
+      description: "أنشئ أكواد تفعيل مدفوعة مسبقًا وتابع المستخدَم منها.",
+    },
+    {
+      href: "/dashboard/admin/code-orders",
+      icon: Inbox,
+      title: "طلبات الأكواد",
+      description:
+        metrics.pendingCodeOrders > 0
+          ? `${metrics.pendingCodeOrders.toLocaleString("ar-EG")} طلب بانتظار المراجعة.`
+          : "راجع طلبات الطلاب لشراء أكواد الكورسات المدفوعة.",
+    },
+  ];
 
   return (
     <div className="animate-fade-in p-6 md:p-8">
