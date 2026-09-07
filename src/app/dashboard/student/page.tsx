@@ -18,15 +18,21 @@ export default async function StudentHomePage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
+  // Only the fields this page actually reads — notably NOT lesson.contentHtml,
+  // which can be large and was being pulled for every lesson in every enrolled
+  // course just to count them.
   const enrollments = userId
     ? await db.enrollment.findMany({
         where: { userId },
-        include: {
+        select: {
+          id: true,
           course: {
-            include: {
+            select: {
+              title: true,
+              slug: true,
               modules: {
                 orderBy: { order: "asc" },
-                include: { lessons: { orderBy: { order: "asc" } } },
+                select: { lessons: { orderBy: { order: "asc" }, select: { id: true } } },
               },
             },
           },
@@ -38,13 +44,15 @@ export default async function StudentHomePage() {
     enrollment.course.modules.flatMap((module) => module.lessons.map((lesson) => lesson.id))
   );
 
-  const [completedProgress, quizAttempts, codeOrders] = await Promise.all([
+  const [completedProgress, quizzesPassed, codeOrders] = await Promise.all([
     userId
       ? db.lessonProgress.findMany({
           where: { userId, lessonId: { in: allLessonIds }, completed: true },
+          select: { lessonId: true, updatedAt: true },
         })
       : Promise.resolve([]),
-    userId ? db.quizAttempt.findMany({ where: { userId } }) : Promise.resolve([]),
+    // Just the number — was pulling every QuizAttempt row ever to count passes.
+    userId ? db.quizAttempt.count({ where: { userId, score: { gte: 50 } } }) : Promise.resolve(0),
     userId
       ? db.codeOrder.findMany({
           where: { userId },
@@ -64,7 +72,6 @@ export default async function StudentHomePage() {
   const completedThisWeek = completedProgress.filter(
     (p) => nowMs - p.updatedAt.getTime() < ONE_WEEK_MS
   ).length;
-  const quizzesPassed = quizAttempts.filter((a) => a.score >= 50).length;
 
   const stats = [
     { icon: CheckCircle2, value: completedProgress.length, label: "درس مكتمل" },
