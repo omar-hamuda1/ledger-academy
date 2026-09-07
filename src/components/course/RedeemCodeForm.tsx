@@ -20,7 +20,7 @@ export function RedeemCodeForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) return;
+    if (loading || !code.trim()) return;
     setLoading(true);
     setError(null);
 

@@ -16,14 +16,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "يجب تسجيل الدخول أولًا." }, { status: 401 });
   }
 
+  // Generous enough that a student mistyping a 12-char code several times
+  // won't get locked out, still far below what a brute-force attempt would
+  // need against a 31^12 keyspace.
   const ip = getClientIp(req);
   const [byUser, byIp] = await Promise.all([
-    checkRateLimit(`redeem:user:${userId}`, 10, TEN_MIN),
-    checkRateLimit(`redeem:ip:${ip}`, 30, TEN_MIN),
+    checkRateLimit(`redeem:user:${userId}`, 25, TEN_MIN),
+    checkRateLimit(`redeem:ip:${ip}`, 60, TEN_MIN),
   ]);
   if (!byUser || !byIp) {
     return NextResponse.json(
-      { error: "محاولات كثيرة جدًا. انتظر قليلًا ثم حاول مرة أخرى." },
+      { error: "لقد أجريت محاولات كثيرة. انتظر بضع دقائق ثم أعد المحاولة." },
       { status: 429 },
     );
   }
