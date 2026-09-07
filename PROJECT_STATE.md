@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-07 (Stripe removed → code-based access; payment-proof upload; admin→student broadcast notifications. See section 3.)
 
-> **Deployed to Vercel as private staging: https://ledger-academy-liart.vercel.app** (commit `e6cd486`, region `fra1`, prod Neon branch). All storage + Upstash env vars now set. See **`HANDOFF-2026-09-07.md`** for deployment state, credentials, env-var status, and the prioritized next-steps list — the live end-to-end payment-proof smoke test is the next task.
+> **Deployed to Vercel as private staging: https://ledger-academy-liart.vercel.app** (commit `e6cd486`, region `fra1`, prod Neon branch). All storage + Upstash env vars now set and **verified end-to-end on prod** (payment-proof upload → approve → code+enrollment). The `test` branch schema is in sync and `vitest run` is green (27/27). See **`HANDOFF-2026-09-07.md`** for deployment state, credentials, env-var status, and the prioritized next-steps list — next real work is §4.3 (SendGrid, owner action) + §4.4/§4.5.
 
 ## 1. Architecture & Tech Stack
 
@@ -107,6 +107,7 @@ Last updated: 2026-09-07 (Stripe removed → code-based access; payment-proof up
   - **Student UI**: `NotificationBell` reworked onto shadcn `Popover` (`npx shadcn add popover` — checked, did **not** touch globals.css) — bell + unread badge in the dashboard header, RTL dropdown, per-item + mark-all read, 60s poll + focus refetch.
   - Not real-time push (SSE/WebSocket) — deliberate, serverless target with no deployment yet; 60s polling + focus refetch is the near-real-time stand-in.
   - **Verification 2026-09-07**: `tsc` + `eslint` + `next build` clean. Tests written (`tests/api/notifications.test.ts`, 3 cases) but **unrun pending `prisma db push` on both branches**; `neon deploy` + `neon env pull` (for the payment-proof bucket from the previous feature) also still pending.
+  - **Closed 2026-09-07 (~13:00)**: `test`-branch schema confirmed already in sync (`prisma db push` → "already in sync"); full `vitest run` green (10 files / 27 tests), `notifications.test.ts` ran for the first time and all 3 pass. The `payment-proofs` bucket + `AWS_*` vars are live on prod — verified end-to-end by inspecting prod data: an `APPROVED` `CodeOrder` with its 562 KB screenshot physically in the private bucket, an issued/used `PrepaidCode`, and the enrollment created. See `HANDOFF-2026-09-07.md` §4.1–4.2.
 
 ## 4. Pending / Known Gaps
 
