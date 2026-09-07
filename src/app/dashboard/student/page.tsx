@@ -8,6 +8,7 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { GamificationWidget } from "@/components/dashboard/GamificationWidget";
 import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
 import { RedeemCodeForm } from "@/components/course/RedeemCodeForm";
+import { CancelCodeOrderButton } from "@/components/course/CancelCodeOrderButton";
 import { StudentCourseList, type StudentCourseItem } from "@/components/dashboard/StudentCourseList";
 
 export const dynamic = "force-dynamic";
@@ -185,8 +186,11 @@ export default async function StudentHomePage() {
                       <p className="mt-0.5 text-xs text-red-400">{order.rejectionReason}</p>
                     )}
                   </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badge.cls}`}>
-                    {badge.text}
+                  <span className="flex items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badge.cls}`}>
+                      {badge.text}
+                    </span>
+                    {order.status === "PENDING" && <CancelCodeOrderButton orderId={order.id} />}
                   </span>
                 </li>
               );

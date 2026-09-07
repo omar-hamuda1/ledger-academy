@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
@@ -6,6 +6,7 @@ import { reviewCodeOrderSchema } from "@/lib/validators/code-orders";
 import { generateCode, formatCode } from "@/lib/prepaid-codes";
 import { logAudit } from "@/lib/audit";
 import { notify } from "@/lib/notify";
+import { sendEmail } from "@/lib/email";
 
 export async function PATCH(
   req: Request,
@@ -23,12 +24,27 @@ export async function PATCH(
 
   const order = await db.codeOrder.findUnique({
     where: { id },
-    include: { course: { select: { title: true, slug: true } } },
+    include: {
+      course: { select: { title: true, slug: true } },
+      user: { select: { email: true } },
+    },
   });
   if (!order) {
     return NextResponse.json({ error: "الطلب غير موجود." }, { status: 404 });
   }
   const courseHref = `/courses/${order.course.slug}`;
+  const courseUrl = `${process.env.NEXTAUTH_URL ?? ""}${courseHref}`;
+
+  // Best-effort email to the student, alongside the in-app notify(). Runs
+  // after the response; no-op until Brevo is configured.
+  const mailStudent = (subject: string, text: string) => {
+    if (!order.user?.email) return;
+    after(() =>
+      sendEmail({ to: order.user!.email, subject, text }).catch((err) =>
+        console.error("[code-orders] student email failed", err),
+      ),
+    );
+  };
   if (order.status !== "PENDING") {
     return NextResponse.json(
       { error: "تمت مراجعة هذا الطلب من قبل." },
@@ -62,6 +78,12 @@ export async function PATCH(
       }`,
       href: courseHref,
     });
+    mailStudent(
+      `تحديث طلبك — ${order.course.title}`,
+      `للأسف لم تتم الموافقة على طلبك لكورس «${order.course.title}».\n` +
+        (parsed.data.rejectionReason ? `السبب: ${parsed.data.rejectionReason}\n` : "") +
+        `يمكنك مراجعة التفاصيل وإعادة المحاولة:\n${courseUrl}`,
+    );
     return NextResponse.json({ order: updated });
   }
 
@@ -90,6 +112,10 @@ export async function PATCH(
       body: `أنت مسجّل بالفعل في كورس «${order.course.title}» — يمكنك متابعة التعلم مباشرة.`,
       href: courseHref,
     });
+    mailStudent(
+      `تمت الموافقة — ${order.course.title}`,
+      `تمت الموافقة على طلبك. أنت مسجّل بالفعل في كورس «${order.course.title}» ويمكنك متابعة التعلم:\n${courseUrl}`,
+    );
     return NextResponse.json({ order: updated, alreadyEnrolled: true });
   }
 
@@ -141,6 +167,12 @@ export async function PATCH(
       body: `تمت الموافقة على طلبك لكورس «${order.course.title}». كودك: ${formatCode(code)} — وتم فتح الكورس لك.`,
       href: courseHref,
     });
+    mailStudent(
+      `تم تفعيل كورس «${order.course.title}»`,
+      `تمت الموافقة على طلبك وتم فتح كورس «${order.course.title}» على حسابك.\n` +
+        `كود التفعيل: ${formatCode(code)}\n\n` +
+        `ابدأ التعلّم الآن:\n${courseUrl}`,
+    );
 
     return NextResponse.json({ order: updated });
   } catch (error) {
@@ -160,6 +192,10 @@ export async function PATCH(
         body: `كورس «${order.course.title}» مُفعّل لديك بالفعل — يمكنك متابعة التعلم.`,
         href: courseHref,
       });
+      mailStudent(
+        `تمت الموافقة — ${order.course.title}`,
+        `تمت الموافقة على طلبك. كورس «${order.course.title}» مُفعّل لديك ويمكنك متابعة التعلم:\n${courseUrl}`,
+      );
       return NextResponse.json({ order: updated, alreadyEnrolled: true });
     }
     console.error("code order approval failed:", error);
