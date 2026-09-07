@@ -7,7 +7,10 @@ import { checkRateLimit } from "./rate-limit";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db),
-  session: { strategy: "jwt" },
+  // 7-day cap (was NextAuth's 30-day default). The token is re-issued on
+  // activity (updateAge, 24h default), so an active user isn't logged out;
+  // this bounds how long an abandoned or stolen session stays valid.
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
   providers: [
     CredentialsProvider({
       name: "Credentials",

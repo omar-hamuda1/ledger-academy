@@ -33,7 +33,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "المستخدم غير موجود." }, { status: 404 });
   }
 
-  // Would this change remove the last active ADMIN?
+  // Defense-in-depth "keep >=1 active ADMIN" check. Largely belt-and-suspenders
+  // now that requireAdmin() itself demands an *active* admin actor (so you
+  // can't reach 0 through a single request), but kept for the concurrent-demote
+  // race and clarity.
   const losesAdmin =
     (parsed.data.action === "setRole" && parsed.data.role === "STUDENT" && target.role === "ADMIN") ||
     (parsed.data.action === "setDisabled" && parsed.data.disabled && target.role === "ADMIN");

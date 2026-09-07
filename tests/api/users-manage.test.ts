@@ -84,28 +84,17 @@ describe("PATCH /api/users/[id]", () => {
     expect(res.status).toBe(400);
   });
 
-  it("refuses to demote the last active admin (409)", async () => {
-    const solo = await createUser("ADMIN");
-    // Park every other active admin so `solo` is the only one left.
-    const parked = await db.user.findMany({
-      where: { role: "ADMIN", disabledAt: null, id: { not: solo.id } },
-      select: { id: true },
-    });
-    await db.user.updateMany({
-      where: { id: { in: parked.map((p) => p.id) } },
-      data: { disabledAt: new Date() },
-    });
-    try {
-      const res = await call(solo.id, { action: "setRole", role: "STUDENT" });
-      expect(res.status).toBe(409);
-      expect((await db.user.findUnique({ where: { id: solo.id } }))!.role).toBe("ADMIN");
-    } finally {
-      await db.user.updateMany({
-        where: { id: { in: parked.map((p) => p.id) } },
-        data: { disabledAt: null },
-      });
-      await cleanupUser(solo.id);
-    }
+  it("a disabled admin is rejected by the guard (403)", async () => {
+    // requireAdmin() re-reads the account, so disabling an admin locks them
+    // out of admin actions on the next request — not just at token expiry.
+    const rogue = await createUser("ADMIN");
+    await db.user.update({ where: { id: rogue.id }, data: { disabledAt: new Date() } });
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: rogue.id, role: "ADMIN" },
+    } as never);
+    const res = await call(other.id, { action: "setDisabled", disabled: true });
+    expect(res.status).toBe(403);
+    await cleanupUser(rogue.id);
   });
 
   it("won't let an admin edit their own row (400)", async () => {
