@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { updateSiteSettingsSchema } from "@/lib/validators/settings";
+import { bustSiteSettingsCache } from "@/lib/site-settings";
 import { logAudit } from "@/lib/audit";
 
 export async function PATCH(req: Request) {
@@ -19,6 +20,9 @@ export async function PATCH(req: Request) {
     create: { id: "main", ...parsed.data },
     update: parsed.data,
   });
+
+  // Drop this instance's cached copy; other warm instances expire within TTL.
+  bustSiteSettingsCache();
 
   await logAudit({
     actorId: admin.id,
