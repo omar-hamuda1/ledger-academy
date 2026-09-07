@@ -4,8 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { VideoPlayer } from "@/components/course/VideoPlayer";
 import { LessonSidebar } from "@/components/course/LessonSidebar";
-import { ResourceList } from "@/components/course/ResourceList";
+import { LessonWorkspacePanel } from "@/components/course/LessonWorkspacePanel";
 import { MarkCompleteButton } from "@/components/course/MarkCompleteButton";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,8 @@ export default async function LessonPage({
   });
   const completedLessonIds = new Set(progressRecords.map((p) => p.lessonId));
 
+  const settings = await getSiteSettings();
+
   return (
     <div dir="rtl" lang="ar" className="flex flex-1 bg-navy-950 text-slate-100">
       <LessonSidebar course={course} activeLessonId={lesson.id} completedLessonIds={completedLessonIds} />
@@ -65,7 +68,6 @@ export default async function LessonPage({
             dangerouslySetInnerHTML={{ __html: lesson.contentHtml }}
           />
         )}
-        <ResourceList resources={lesson.resources} />
 
         <MarkCompleteButton
           lessonId={lesson.id}
@@ -73,6 +75,12 @@ export default async function LessonPage({
           nextLessonHref={nextLessonHref}
         />
       </div>
+
+      <LessonWorkspacePanel
+        resources={lesson.resources}
+        showBreakEven={settings.showBreakEvenTool}
+        showSwot={settings.showSwotTool}
+      />
     </div>
   );
 }
