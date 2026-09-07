@@ -1,10 +1,8 @@
 import { Cairo } from "next/font/google";
 import Link from "next/link";
 import {
-  Users,
-  Target,
-  Award,
   BookOpen,
+  Layers,
   CheckCircle2,
   ArrowLeft,
   PlayCircle,
@@ -121,11 +119,23 @@ export default async function LandingPage() {
     getSiteSettings(),
   ]);
 
+  // Real, computed figures only — no fabricated "students" / "satisfaction".
+  const totals = courses.reduce(
+    (acc, c) => {
+      const m = courseMeta(c.modules);
+      return {
+        modules: acc.modules + m.moduleCount,
+        lessons: acc.lessons + m.lessonCount,
+        quizzes: acc.quizzes + m.quizCount,
+      };
+    },
+    { modules: 0, lessons: 0, quizzes: 0 },
+  );
   const stats = [
-    { icon: Users, target: settings.studentsCount, suffix: "+", label: "طالب مستفيد" },
-    { icon: BookOpen, target: courses.length, suffix: "", label: "مستويات دراسية كاملة" },
-    { icon: Target, target: 100, suffix: "+", label: "تقييم واختبار تفاعلي" },
-    { icon: Award, target: settings.satisfactionRate, suffix: "%", label: "نسبة رضا الطلاب" },
+    { icon: BookOpen, target: courses.length, suffix: "", label: "كورس منشور" },
+    { icon: Layers, target: totals.modules, suffix: "", label: "وحدة دراسية" },
+    { icon: PlayCircle, target: totals.lessons, suffix: "", label: "درس فيديو" },
+    { icon: ClipboardCheck, target: totals.quizzes, suffix: "", label: "اختبار تفاعلي" },
   ];
 
   const preview = courses.find((c) => c.modules.length > 0) ?? null;
@@ -233,22 +243,24 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ---------- Stats ---------- */}
-      <section className="border-y border-white/10 bg-navy-900/60">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-6 py-11 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center gap-2 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-gold-400">
-                <stat.icon size={22} />
-              </span>
-              <p className="text-2xl font-extrabold text-white sm:text-3xl">
-                <AnimatedCounter target={stat.target} suffix={stat.suffix} />
-              </p>
-              <p className="text-sm text-slate-400">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ---------- Stats (real, computed — hidden until there's content) ---------- */}
+      {courses.length > 0 && (
+        <section className="border-y border-white/10 bg-navy-900/60">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-6 py-11 md:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center gap-2 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-gold-400">
+                  <stat.icon size={22} />
+                </span>
+                <p className="text-2xl font-extrabold text-white sm:text-3xl">
+                  <AnimatedCounter target={stat.target} suffix={stat.suffix} />
+                </p>
+                <p className="text-sm text-slate-400">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ---------- Why ---------- */}
       <section className="mx-auto max-w-7xl px-6 py-24">

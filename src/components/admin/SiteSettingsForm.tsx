@@ -26,8 +26,10 @@ export function SiteSettingsForm({
   initialPaymentInstructions: string;
 }) {
   const router = useRouter();
-  const [studentsCount, setStudentsCount] = useState(initialStudentsCount);
-  const [satisfactionRate, setSatisfactionRate] = useState(initialSatisfactionRate);
+  // Kept in the payload for schema compatibility, but no longer shown anywhere
+  // — the homepage stats are computed from real data now, not these.
+  const [studentsCount] = useState(initialStudentsCount);
+  const [satisfactionRate] = useState(initialSatisfactionRate);
   const [contactEmail, setContactEmail] = useState(initialContactEmail);
   const [contactPhone, setContactPhone] = useState(initialContactPhone);
   const [showBreakEvenTool, setShowBreakEvenTool] = useState(initialShowBreakEvenTool);
@@ -76,33 +78,6 @@ export function SiteSettingsForm({
   return (
     <form onSubmit={handleSubmit} className="animate-slide-up space-y-6 rounded-card border border-white/10 bg-navy-900/60 p-6 shadow-card">
       {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
-
-      <div>
-        <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-400">إحصائيات الصفحة الرئيسية</h3>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm text-slate-300">عدد الطلاب المستفيدين</label>
-            <input
-              type="number"
-              min={0}
-              value={studentsCount}
-              onChange={(e) => setStudentsCount(Number(e.target.value))}
-              className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white focus:border-gold-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm text-slate-300">نسبة رضا الطلاب (%)</label>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={satisfactionRate}
-              onChange={(e) => setSatisfactionRate(Number(e.target.value))}
-              className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white focus:border-gold-400 focus:outline-none"
-            />
-          </div>
-        </div>
-      </div>
 
       <div>
         <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-400">بيانات التواصل</h3>
