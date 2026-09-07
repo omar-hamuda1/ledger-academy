@@ -47,8 +47,13 @@ export default async function StudentHomePage() {
   ]);
   const completedLessonIds = new Set(completedProgress.map((p) => p.lessonId));
 
+  // Async Server Component: renders once per request, so reading the wall
+  // clock here is correct. The react-hooks purity rule targets client
+  // components / the React Compiler, where re-renders would make this unstable.
+  // eslint-disable-next-line react-hooks/purity
+  const nowMs = Date.now();
   const completedThisWeek = completedProgress.filter(
-    (p) => Date.now() - p.updatedAt.getTime() < ONE_WEEK_MS
+    (p) => nowMs - p.updatedAt.getTime() < ONE_WEEK_MS
   ).length;
   const quizzesPassed = quizAttempts.filter((a) => a.score >= 50).length;
 

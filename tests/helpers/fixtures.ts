@@ -26,11 +26,11 @@ export async function createCourse(instructorId: string, price = 100) {
 }
 
 export async function createLessonWithQuiz(courseId: string) {
-  const module = await db.module.create({
+  const createdModule = await db.module.create({
     data: { title: "Test Module", courseId, order: 1 },
   });
   const lesson = await db.lesson.create({
-    data: { title: "Test Lesson", moduleId: module.id, order: 1 },
+    data: { title: "Test Lesson", moduleId: createdModule.id, order: 1 },
   });
   const quiz = await db.quiz.create({ data: { lessonId: lesson.id } });
   const question = await db.question.create({
@@ -44,7 +44,7 @@ export async function createLessonWithQuiz(courseId: string) {
       correctId: "b",
     },
   });
-  return { module, lesson, quiz, question };
+  return { module: createdModule, lesson, quiz, question };
 }
 
 export async function enroll(userId: string, courseId: string) {

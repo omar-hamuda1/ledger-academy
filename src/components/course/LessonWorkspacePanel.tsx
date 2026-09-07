@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Wrench, X, FileText, PanelLeftOpen } from "lucide-react";
 import type { Resource } from "@prisma/client";
 import { BreakEvenCalculator } from "@/components/tools/BreakEvenCalculator";
 import { SwotBoard } from "@/components/tools/SwotBoard";
+import { useLocalStorage } from "@/lib/use-local-storage";
 
 type Tab = "files" | "tools";
 
 const TAB_STORAGE_KEY = "la_lesson_panel_tab";
+const identity = (s: string) => s;
 
 export function LessonWorkspacePanel({
   resources,
@@ -25,16 +27,17 @@ export function LessonWorkspacePanel({
   const hasFiles = resources.length > 0;
 
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>(hasFiles ? "files" : "tools");
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(TAB_STORAGE_KEY) as Tab | null;
-      if (saved === "files" || saved === "tools") setTab(saved);
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const defaultTab: Tab = hasFiles ? "files" : "tools";
+  const parseTab = useCallback(
+    (raw: string): Tab => (raw === "files" || raw === "tools" ? raw : defaultTab),
+    [defaultTab],
+  );
+  const [tab, setTab] = useLocalStorage<Tab>(
+    TAB_STORAGE_KEY,
+    defaultTab,
+    parseTab,
+    identity,
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -47,15 +50,6 @@ export function LessonWorkspacePanel({
 
   // Nothing to show — don't render the trigger at all.
   if (!hasTools && !hasFiles) return null;
-
-  function selectTab(next: Tab) {
-    setTab(next);
-    try {
-      localStorage.setItem(TAB_STORAGE_KEY, next);
-    } catch {
-      /* ignore */
-    }
-  }
 
   const slide = reduceMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
@@ -118,10 +112,10 @@ export function LessonWorkspacePanel({
 
               {hasFiles && hasTools && (
                 <div className="flex gap-1 border-b border-white/10 px-3 pt-2">
-                  <TabButton active={tab === "files"} onClick={() => selectTab("files")}>
+                  <TabButton active={tab === "files"} onClick={() => setTab("files")}>
                     الملفات ({resources.length.toLocaleString("ar-EG")})
                   </TabButton>
-                  <TabButton active={tab === "tools"} onClick={() => selectTab("tools")}>
+                  <TabButton active={tab === "tools"} onClick={() => setTab("tools")}>
                     الأدوات
                   </TabButton>
                 </div>

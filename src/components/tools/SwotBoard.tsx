@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { TrendingUp, TrendingDown, Target, ShieldAlert, Check } from "lucide-react";
+import { useLocalStorage } from "@/lib/use-local-storage";
 
 const quadrants = [
   { key: "strengths", label: "نقاط القوة", icon: TrendingUp, color: "text-emerald-400", placeholder: "مثال: فريق عمل ذو خبرة" },
@@ -23,30 +24,15 @@ const emptyState: SwotState = {
 };
 
 export function SwotBoard() {
-  const [values, setValues] = useState<SwotState>(emptyState);
+  const [values, setValues] = useLocalStorage<SwotState>(STORAGE_KEY, emptyState);
   const [justSaved, setJustSaved] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setValues(JSON.parse(saved));
-    } catch {
-      // ignore malformed/missing local storage
-    }
-  }, []);
-
   function updateField(key: QuadrantKey, value: string) {
-    const next = { ...values, [key]: value };
-    setValues(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setJustSaved(true);
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(() => setJustSaved(false), 1500);
-    } catch {
-      // storage may be unavailable (private mode); the in-memory value still works
-    }
+    setValues({ ...values, [key]: value });
+    setJustSaved(true);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => setJustSaved(false), 1500);
   }
 
   return (

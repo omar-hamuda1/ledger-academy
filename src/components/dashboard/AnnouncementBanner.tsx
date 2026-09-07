@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Megaphone, X } from "lucide-react";
+import { useLocalStorage } from "@/lib/use-local-storage";
 
 const STORAGE_KEY = "la_announcement_dismissed";
+const identity = (s: string) => s;
 
 /**
  * Small stable hash of the announcement text. The per-viewer "dismissed"
@@ -22,26 +23,13 @@ function hash(text: string): string {
 
 export function AnnouncementBanner({ text }: { text: string }) {
   const key = hash(text);
-  // Start hidden so SSR and the first client paint agree; reveal in effect
-  // once we've checked localStorage.
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    try {
-      setVisible(localStorage.getItem(STORAGE_KEY) !== key);
-    } catch {
-      setVisible(true);
-    }
-  }, [key]);
-
-  function dismiss() {
-    setVisible(false);
-    try {
-      localStorage.setItem(STORAGE_KEY, key);
-    } catch {
-      /* ignore private-mode / disabled storage */
-    }
-  }
+  const [dismissedKey, setDismissedKey] = useLocalStorage(
+    STORAGE_KEY,
+    "",
+    identity,
+    identity,
+  );
+  const visible = dismissedKey !== key;
 
   return (
     <AnimatePresence>
@@ -61,7 +49,7 @@ export function AnnouncementBanner({ text }: { text: string }) {
           </p>
           <button
             type="button"
-            onClick={dismiss}
+            onClick={() => setDismissedKey(key)}
             aria-label="إخفاء الإعلان"
             className="shrink-0 rounded-control p-1 text-slate-400 transition hover:bg-white/10 hover:text-white"
           >

@@ -16,8 +16,8 @@ export async function POST(req: Request) {
 
   const { moduleId, title, videoUrl } = parsed.data;
 
-  const module = await db.module.findUnique({ where: { id: moduleId } });
-  if (!module) {
+  const parentModule = await db.module.findUnique({ where: { id: moduleId } });
+  if (!parentModule) {
     return NextResponse.json({ error: "الوحدة غير موجودة." }, { status: 404 });
   }
 

@@ -8,9 +8,10 @@ const GRADE_ICON = [
   { match: "الثالث", icon: Award },
 ] as const;
 
-function iconForGrade(grade: string | null) {
-  if (!grade) return BookOpen;
-  return GRADE_ICON.find((g) => grade.includes(g.match))?.icon ?? BookOpen;
+function GradeIcon({ grade }: { grade: string | null }) {
+  const Icon =
+    (grade && GRADE_ICON.find((g) => grade.includes(g.match))?.icon) || BookOpen;
+  return <Icon size={24} />;
 }
 
 export function CourseCard({
@@ -20,8 +21,6 @@ export function CourseCard({
   course: { slug: string; title: string; description: string; grade: string | null; thumbnailUrl?: string | null };
   highlights?: string[];
 }) {
-  const Icon = iconForGrade(course.grade);
-
   return (
     <div className="flex flex-col rounded-card border border-white/10 bg-navy-900/60 p-8 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-gold-400/40 hover:shadow-elevated">
       {course.thumbnailUrl ? (
@@ -36,7 +35,7 @@ export function CourseCard({
         </div>
       ) : (
         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-control bg-gold-400/10 text-gold-400">
-          <Icon size={24} />
+          <GradeIcon grade={course.grade} />
         </span>
       )}
 
