@@ -6,6 +6,10 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { paymentProofStore, paymentProofPrefix } from "@/lib/storage";
 
 const MAX_BYTES = 5 * 1024 * 1024;
+// Hard cap on stored proofs per user (~this * MAX_BYTES total). The hourly
+// rate limit bounds bursts; this bounds accumulation across days, e.g. a
+// student hammering the endpoint without ever submitting an order.
+const MAX_STORED_PER_USER = 15;
 const TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -36,6 +40,22 @@ export async function POST(req: Request) {
       { error: "محاولات رفع كثيرة. انتظر قليلًا ثم حاول مرة أخرى." },
       { status: 429 },
     );
+  }
+
+  // Fail-open: if the listing hiccups, the rate limit is still the backstop.
+  try {
+    const existing = await paymentProofStore.list({
+      prefix: paymentProofPrefix(userId),
+      limit: MAX_STORED_PER_USER + 1,
+    });
+    if (existing.items.length >= MAX_STORED_PER_USER) {
+      return NextResponse.json(
+        { error: "لديك عدد كبير من الصور المرفوعة. تواصل مع الدعم لمتابعة طلبك." },
+        { status: 429 },
+      );
+    }
+  } catch (error) {
+    console.error("payment proof quota check failed:", error);
   }
 
   const form = await req.formData().catch(() => null);
