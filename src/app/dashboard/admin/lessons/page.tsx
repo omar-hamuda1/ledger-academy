@@ -5,6 +5,7 @@ import { AddLessonForm } from "@/components/admin/AddLessonForm";
 import { DeleteLessonButton } from "@/components/admin/DeleteLessonButton";
 import { AddModuleForm } from "@/components/admin/AddModuleForm";
 import { DeleteModuleButton } from "@/components/admin/DeleteModuleButton";
+import { ReorderButtons } from "@/components/admin/ReorderButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +33,16 @@ export default async function AdminLessonsPage() {
             <h2 className="mb-4 text-lg font-bold text-white">{course.title}</h2>
 
             <div className="space-y-6">
-              {course.modules.map((module) => (
+              {course.modules.map((module, mi) => (
                 <div key={module.id} className="rounded-control border border-white/10 bg-navy-950/40 p-5">
                   <div className="mb-3 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
+                      <ReorderButtons
+                        kind="modules"
+                        id={module.id}
+                        isFirst={mi === 0}
+                        isLast={mi === course.modules.length - 1}
+                      />
                       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold-400/10 text-gold-400">
                         <BookOpen size={16} />
                       </span>
@@ -45,12 +52,18 @@ export default async function AdminLessonsPage() {
                   </div>
 
                   <ul className="space-y-1">
-                    {module.lessons.map((lesson) => (
+                    {module.lessons.map((lesson, li) => (
                       <li
                         key={lesson.id}
                         className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-white/5"
                       >
                         <span className="flex items-center gap-2 text-sm text-slate-200">
+                          <ReorderButtons
+                            kind="lessons"
+                            id={lesson.id}
+                            isFirst={li === 0}
+                            isLast={li === module.lessons.length - 1}
+                          />
                           <PlayCircle size={15} className="shrink-0 text-slate-400" />
                           {lesson.title}
                         </span>

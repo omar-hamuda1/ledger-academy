@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { updateLessonSchema } from "@/lib/validators/lesson";
+import { moveSchema } from "@/lib/validators/reorder";
 import { logAudit } from "@/lib/audit";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -10,6 +11,38 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
+
+  // Reorder within the module (swap `order` with the adjacent lesson).
+  const move = moveSchema.safeParse(body);
+  if (move.success) {
+    const current = await db.lesson.findUnique({ where: { id } });
+    if (!current) {
+      return NextResponse.json({ error: "الدرس غير موجود." }, { status: 404 });
+    }
+    const up = move.data.direction === "up";
+    const neighbor = await db.lesson.findFirst({
+      where: { moduleId: current.moduleId, order: up ? { lt: current.order } : { gt: current.order } },
+      orderBy: { order: up ? "desc" : "asc" },
+    });
+    if (!neighbor) return NextResponse.json({ ok: true, moved: false });
+
+    await db.$transaction([
+      db.lesson.update({ where: { id: current.id }, data: { order: neighbor.order } }),
+      db.lesson.update({ where: { id: neighbor.id }, data: { order: current.order } }),
+    ]);
+
+    await logAudit({
+      actorId: admin.id,
+      actorEmail: admin.email ?? "unknown",
+      action: "lesson.reorder",
+      targetType: "Lesson",
+      targetId: id,
+      metadata: { direction: move.data.direction },
+    });
+
+    return NextResponse.json({ ok: true, moved: true });
+  }
+
   const parsed = updateLessonSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
