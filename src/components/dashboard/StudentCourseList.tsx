@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Award } from "lucide-react";
 import { CircularProgress } from "./CircularProgress";
+import { CertificateButton } from "./CertificateButton";
 
 export type StudentCourseItem = {
   id: string;
+  courseId: string;
   title: string;
   percent: number;
   completedCount: number;
   totalLessons: number;
   continueHref: string | null;
+  certSerial: string | null;
 };
 
 const listVariants = {
@@ -59,6 +62,20 @@ export function StudentCourseList({ courses }: { courses: StudentCourseItem[] })
               متابعة التعلم
             </Link>
           )}
+
+          {course.percent >= 100 &&
+            (course.certSerial ? (
+              <Link
+                href={`/certificates/${course.certSerial}`}
+                target="_blank"
+                className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-gold-400/40 py-2.5 text-sm font-bold text-gold-400 transition hover:bg-gold-400/10"
+              >
+                <Award size={16} />
+                عرض شهادتك
+              </Link>
+            ) : (
+              <CertificateButton courseId={course.courseId} />
+            ))}
         </motion.li>
       ))}
     </motion.ul>

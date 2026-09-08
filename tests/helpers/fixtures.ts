@@ -104,5 +104,6 @@ export async function cleanupUser(userId: string) {
   await db.codeOrder.deleteMany({
     where: { OR: [{ userId }, { reviewedById: userId }] },
   });
+  await db.certificate.deleteMany({ where: { userId } });
   await db.user.delete({ where: { id: userId } }).catch(() => {});
 }

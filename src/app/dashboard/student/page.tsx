@@ -29,6 +29,7 @@ export default async function StudentHomePage() {
           id: true,
           course: {
             select: {
+              id: true,
               title: true,
               slug: true,
               modules: {
@@ -45,7 +46,7 @@ export default async function StudentHomePage() {
     enrollment.course.modules.flatMap((module) => module.lessons.map((lesson) => lesson.id))
   );
 
-  const [completedProgress, quizzesPassed, codeOrders] = await Promise.all([
+  const [completedProgress, quizzesPassed, codeOrders, certificates] = await Promise.all([
     userId
       ? db.lessonProgress.findMany({
           where: { userId, lessonId: { in: allLessonIds }, completed: true },
@@ -62,8 +63,12 @@ export default async function StudentHomePage() {
           include: { course: { select: { title: true, slug: true } } },
         })
       : Promise.resolve([]),
+    userId
+      ? db.certificate.findMany({ where: { userId }, select: { courseId: true, serial: true } })
+      : Promise.resolve([]),
   ]);
   const completedLessonIds = new Set(completedProgress.map((p) => p.lessonId));
+  const certByCourse = new Map(certificates.map((c) => [c.courseId, c.serial]));
 
   // Async Server Component: renders once per request, so reading the wall
   // clock here is correct. The react-hooks purity rule targets client
@@ -101,11 +106,13 @@ export default async function StudentHomePage() {
 
     return {
       id: enrollment.id,
+      courseId: enrollment.course.id,
       title: enrollment.course.title,
       percent,
       completedCount,
       totalLessons: lessons.length,
       continueHref,
+      certSerial: certByCourse.get(enrollment.course.id) ?? null,
     };
   });
 

@@ -20,6 +20,7 @@ model User {
   enrollments           Enrollment[]
   progress              LessonProgress[]
   quizAttempts          QuizAttempt[]
+  certificates          Certificate[]
   coursesOwned          Course[]           @relation("InstructorCourses")
   redeemedCodes         PrepaidCode[]
   codeOrders            CodeOrder[]        @relation("RequestedCodeOrders")
@@ -51,6 +52,22 @@ model Course {
   enrollments  Enrollment[]
   prepaidCodes PrepaidCode[]
   codeOrders   CodeOrder[]
+  certificates Certificate[]
+}
+
+// Issued once a student completes 100% of a course's lessons. `serial` is the
+// public, shareable id — /certificates/<serial> renders and verifies it.
+model Certificate {
+  id       String   @id @default(cuid())
+  serial   String   @unique
+  userId   String
+  courseId String
+  user     User     @relation(fields: [userId], references: [id])
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  issuedAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([courseId])
 }
 
 model Module {

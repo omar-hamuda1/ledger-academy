@@ -51,6 +51,11 @@ A full audit on 2026-09-06 found and fixed several real, exploitable bugs. These
 - **Minimum paid price is `MIN_EGP_PRICE` (20 ج.م) from `src/lib/pricing.ts`, or exactly 0 for free.** Enforced in the admin course-create/price-save routes; keep it — it's just a sanity floor now (the original reason, Stripe's per-currency minimum, is gone).
 - Quiz/exam scoring must always be computed server-side. Never send `correctId` (or any answer key) to the client before grading.
 
+## Certificates
+- A `Certificate` (one per `(userId, courseId)`) is issued when a student has **completed every lesson** in an enrolled course (`isCourseComplete()` in `src/lib/certificates.ts` — a course with 0 lessons can't complete). `POST /api/certificates { courseId }` is student-triggered and **idempotent** (returns the existing serial). It does not gate on quiz scores.
+- `serial` is the public id — `/certificates/<serial>` (top-level route, not in `(marketing)`, so the print layout is clean) renders the certificate and doubles as the verification page (unknown serial → "غير صالحة"). Serials use a no-ambiguous-chars alphabet (`generateSerial()`).
+- The certificate shows `course.instructor.name` — note the course-detail page currently hardcodes "محمد حسين" instead of reading the relation; the cert uses the real relation, so keep the instructor user's `name` correct.
+
 ## Forms & user input
 - **Never auto-derive a URL slug from an Arabic title.** A naive `slugify()` that strips non-`[a-z0-9]` characters removes 100% of Arabic text, so it silently produces a garbage slug like `-` (which the old regex `^[a-z0-9-]+$` accepted as "valid," creating a real course with a broken URL). The course-creation form (`CreateCourseForm.tsx`) requires the admin to type the slug in English directly — don't try to reintroduce auto-fill-from-title. The slug regex (`createCourseSchema`) requires at least one real alphanumeric segment, not just hyphens; keep it that way.
 
