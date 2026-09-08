@@ -21,6 +21,7 @@ model User {
   progress              LessonProgress[]
   quizAttempts          QuizAttempt[]
   certificates          Certificate[]
+  reviews               Review[]
   coursesOwned          Course[]           @relation("InstructorCourses")
   redeemedCodes         PrepaidCode[]
   codeOrders            CodeOrder[]        @relation("RequestedCodeOrders")
@@ -53,6 +54,27 @@ model Course {
   prepaidCodes PrepaidCode[]
   codeOrders   CodeOrder[]
   certificates Certificate[]
+  reviews      Review[]
+}
+
+// A student's rating (+ optional text) for a course they're enrolled in.
+// One per (user, course) — POST upserts. `hidden` lets an admin suppress an
+// abusive review without deleting it; hidden reviews are excluded from the
+// average and the public list.
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rating    Int // 1..5
+  body      String?
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([courseId])
 }
 
 // Issued once a student completes 100% of a course's lessons. `serial` is the

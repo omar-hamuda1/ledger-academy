@@ -10,17 +10,21 @@ import {
   FileText,
   LayoutGrid,
   Clock,
+  Star,
   Infinity as InfinityIcon,
 } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { courseMeta, formatDuration } from "@/lib/course-meta";
+import { courseRating, courseReviews } from "@/lib/reviews";
 import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
 import { LedgerFooter } from "@/components/ledger-academy/LedgerFooter";
 import { EnrollButton } from "@/components/course/EnrollButton";
 import { RedeemCodeForm } from "@/components/course/RedeemCodeForm";
 import { RequestAccessForm } from "@/components/course/RequestAccessForm";
+import { RateCourseForm } from "@/components/course/RateCourseForm";
+import { Stars } from "@/components/course/Stars";
 import { getSiteSettings } from "@/lib/site-settings";
 
 const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
@@ -70,6 +74,16 @@ export default async function CourseDetailPage({
         getSiteSettings(),
       ])
     : [null, null];
+
+  const [rating, reviews, myReview] = await Promise.all([
+    courseRating(course.id),
+    courseReviews(course.id, 30),
+    enrollment
+      ? db.review.findUnique({
+          where: { userId_courseId: { userId: userId!, courseId: course.id } },
+        })
+      : Promise.resolve(null),
+  ]);
 
   const meta = courseMeta(course.modules);
   const durationText = formatDuration(meta.durationSec);
@@ -124,6 +138,12 @@ export default async function CourseDetailPage({
               <User size={15} className="text-gold-400" />
               المحاضر: محمد حسين
             </span>
+            {rating.count > 0 && (
+              <span className="flex items-center gap-1.5">
+                <Star size={15} className="text-gold-400" fill="currentColor" />
+                {rating.avg.toLocaleString("ar-EG")} ({rating.count.toLocaleString("ar-EG")} تقييم)
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -201,6 +221,51 @@ export default async function CourseDetailPage({
               </div>
             </div>
           )}
+
+          {/* reviews */}
+          <div className="mt-10">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-xl font-extrabold text-white">التقييمات</h2>
+              {rating.count > 0 && (
+                <span className="flex items-center gap-2 text-sm text-slate-400">
+                  <Stars value={rating.avg} />
+                  {rating.avg.toLocaleString("ar-EG")} · {rating.count.toLocaleString("ar-EG")} تقييم
+                </span>
+              )}
+            </div>
+
+            {enrollment && (
+              <div className="mt-4 max-w-lg">
+                <RateCourseForm
+                  courseId={course.id}
+                  reviewId={myReview?.id ?? null}
+                  initialRating={myReview?.rating ?? 0}
+                  initialBody={myReview?.body ?? ""}
+                />
+              </div>
+            )}
+
+            {reviews.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-400">لا توجد تقييمات بعد.</p>
+            ) : (
+              <ul className="mt-4 space-y-3">
+                {reviews.map((r) => (
+                  <li
+                    key={r.id}
+                    className="rounded-card border border-white/10 bg-navy-900/60 p-4 shadow-card"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-white">{r.authorName}</span>
+                      <Stars value={r.rating} />
+                    </div>
+                    {r.body && (
+                      <p className="mt-2 text-sm leading-relaxed text-slate-300">{r.body}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* sticky purchase sidebar */}
