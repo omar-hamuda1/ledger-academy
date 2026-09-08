@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserPlus, ShieldCheck } from "lucide-react";
@@ -64,14 +65,29 @@ export default function RegisterPage() {
     });
     const data = await res.json().catch(() => ({}));
 
-    setLoading(false);
-
     if (!res.ok) {
+      setLoading(false);
       setError(data.error ?? "حدث خطأ ما، حاول مرة أخرى.");
       return;
     }
 
-    router.push("/login");
+    // Account created — log them straight in instead of sending them to /login.
+    const signInResult = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (signInResult?.error) {
+      // Account exists but auto-login failed for some reason — fall back to the login page.
+      router.push("/login");
+      return;
+    }
+
+    const session = await getSession();
+    const role = (session?.user as { role?: string } | undefined)?.role;
+
+    router.push(role === "ADMIN" ? "/dashboard/admin" : "/dashboard/student");
   }
 
   return (
