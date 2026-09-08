@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { db } from "@/lib/db";
 import { EditCourseDetailsForm } from "@/components/admin/EditCourseDetailsForm";
+import { CourseRoster, type RosterRow } from "@/components/admin/CourseRoster";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,18 @@ export default async function EditCoursePage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const course = await db.course.findUnique({ where: { id } });
   if (!course) notFound();
+
+  const enrollments = await db.enrollment.findMany({
+    where: { courseId: id },
+    orderBy: { enrolledAt: "desc" },
+    include: { user: { select: { id: true, name: true, email: true } } },
+  });
+  const roster: RosterRow[] = enrollments.map((e) => ({
+    userId: e.user.id,
+    name: e.user.name,
+    email: e.user.email,
+    enrolledAt: e.enrolledAt.getTime(),
+  }));
 
   return (
     <div className="animate-fade-in p-6 md:p-8">
@@ -34,6 +47,10 @@ export default async function EditCoursePage({ params }: { params: Promise<{ id:
           initialPrice={Number(course.price)}
           initialIsPublished={course.isPublished}
         />
+      </div>
+
+      <div className="max-w-3xl">
+        <CourseRoster courseId={course.id} rows={roster} />
       </div>
     </div>
   );
