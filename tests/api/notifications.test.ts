@@ -19,7 +19,10 @@ describe("notifications", () => {
     studentB = await createUser("STUDENT");
   });
 
+  const extraUsers: string[] = [];
+
   afterAll(async () => {
+    for (const id of extraUsers) await cleanupUser(id);
     await cleanupUser(studentA.id);
     await cleanupUser(studentB.id);
     await cleanupUser(admin.id);
@@ -79,5 +82,68 @@ describe("notifications", () => {
     as(studentB.id, "STUDENT");
     const stillB = await (await listNotifications()).json();
     expect(stillB.unreadCount).toBeGreaterThanOrEqual(1);
+  });
+
+  // Helper: a student whose join date is `offsetMs` relative to `ref`.
+  async function studentJoiningAt(ref: Date, offsetMs: number) {
+    const u = await createUser("STUDENT");
+    extraUsers.push(u.id);
+    return db.user.update({
+      where: { id: u.id },
+      data: { createdAt: new Date(ref.getTime() + offsetMs) },
+    });
+  }
+
+  it("CURRENT_STUDENTS broadcast (default) is hidden from a student who joins afterwards", async () => {
+    as(admin.id, "ADMIN", admin.email);
+    const { notification } = await (
+      await broadcast(
+        post("http://localhost/api/notifications", { title: "تنبيه مؤقت", message: "لهذا الأسبوع" }),
+      )
+    ).json();
+    expect(notification.audience).toBe("CURRENT_STUDENTS");
+    const sentAt = new Date(notification.createdAt);
+
+    const late = await studentJoiningAt(sentAt, 1000);
+    const early = await studentJoiningAt(sentAt, -1000);
+
+    as(late.id, "STUDENT");
+    const lateList = await (await listNotifications()).json();
+    expect(lateList.notifications.some((n: { id: string }) => n.id === notification.id)).toBe(false);
+
+    as(early.id, "STUDENT");
+    const earlyList = await (await listNotifications()).json();
+    expect(earlyList.notifications.some((n: { id: string }) => n.id === notification.id)).toBe(true);
+  });
+
+  it("ALL_STUDENTS broadcast is visible to a student who joins afterwards", async () => {
+    as(admin.id, "ADMIN", admin.email);
+    const { notification } = await (
+      await broadcast(
+        post("http://localhost/api/notifications", {
+          title: "دليل الاستخدام",
+          message: "اقرأه دائمًا",
+          audience: "ALL_STUDENTS",
+        }),
+      )
+    ).json();
+    expect(notification.audience).toBe("ALL_STUDENTS");
+
+    const late = await studentJoiningAt(new Date(notification.createdAt), 60_000);
+    as(late.id, "STUDENT");
+    const lateList = await (await listNotifications()).json();
+    expect(lateList.notifications.some((n: { id: string }) => n.id === notification.id)).toBe(true);
+  });
+
+  it("rejects an unknown audience value", async () => {
+    as(admin.id, "ADMIN", admin.email);
+    const res = await broadcast(
+      post("http://localhost/api/notifications", {
+        title: "x",
+        message: "y",
+        audience: "EVERYONE_EVER",
+      }),
+    );
+    expect(res.status).toBe(400);
   });
 });

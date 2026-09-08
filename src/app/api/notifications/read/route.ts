@@ -24,7 +24,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
   }
 
-  const where = visibleNotificationsWhere(userId, role);
+  const account = await db.user.findUnique({
+    where: { id: userId },
+    select: { createdAt: true },
+  });
+  const where = visibleNotificationsWhere(userId, role, account?.createdAt ?? new Date(0));
 
   // Only mark notifications the caller can actually see, and only ones not
   // already read (skipDuplicates guards the composite PK).

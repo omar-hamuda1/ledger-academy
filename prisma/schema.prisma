@@ -258,19 +258,29 @@ enum CodeOrderStatus {
 // Read state lives in NotificationRead (a row per user who has seen it), so a
 // broadcast is one row regardless of student count.
 model Notification {
-  id           String             @id @default(cuid())
+  id           String               @id @default(cuid())
   title        String
   body         String
   href         String?
   targetUserId String?
-  targetUser   User?              @relation("NotificationTarget", fields: [targetUserId], references: [id])
+  targetUser   User?                @relation("NotificationTarget", fields: [targetUserId], references: [id])
   createdById  String?
-  createdBy    User?              @relation("NotificationAuthor", fields: [createdById], references: [id])
-  createdAt    DateTime           @default(now())
+  createdBy    User?                @relation("NotificationAuthor", fields: [createdById], references: [id])
+  createdAt    DateTime             @default(now())
+  // Only meaningful for broadcasts (targetUserId null). CURRENT_STUDENTS: seen
+  // only by students who existed when it was sent (createdAt >= user.createdAt).
+  // ALL_STUDENTS: seen by every student, including later signups. Ignored for
+  // targeted rows.
+  audience     NotificationAudience @default(CURRENT_STUDENTS)
   reads        NotificationRead[]
 
   @@index([targetUserId, createdAt])
   @@index([createdAt])
+}
+
+enum NotificationAudience {
+  CURRENT_STUDENTS
+  ALL_STUDENTS
 }
 
 model NotificationRead {

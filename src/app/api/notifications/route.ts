@@ -18,7 +18,12 @@ export async function GET() {
     return NextResponse.json({ error: "يجب تسجيل الدخول أولًا." }, { status: 401 });
   }
 
-  const where = visibleNotificationsWhere(userId, role);
+  // Needed to bound CURRENT_STUDENTS broadcasts to this student's join date.
+  const account = await db.user.findUnique({
+    where: { id: userId },
+    select: { createdAt: true },
+  });
+  const where = visibleNotificationsWhere(userId, role, account?.createdAt ?? new Date(0));
 
   // One query, not two: the bell polls this per user on an interval, so the
   // separate unread `count()` was doubling that load. `take: 20` already caps
@@ -63,6 +68,7 @@ export async function POST(req: Request) {
   const notification = await broadcastToStudents({
     title: parsed.data.title,
     body: parsed.data.message,
+    audience: parsed.data.audience,
     createdById: admin.id,
   });
 
@@ -72,7 +78,7 @@ export async function POST(req: Request) {
     action: "notification.broadcast",
     targetType: "Notification",
     targetId: notification.id,
-    metadata: { title: notification.title },
+    metadata: { title: notification.title, audience: notification.audience },
   });
 
   return NextResponse.json({ notification }, { status: 201 });

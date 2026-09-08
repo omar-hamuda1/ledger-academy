@@ -29,15 +29,18 @@ export async function notify(params: {
 }
 
 /**
- * One broadcast row (`targetUserId` null) visible to every STUDENT — no
- * fan-out, so student count doesn't matter. Not best-effort: the admin
- * compose route awaits this and surfaces failure.
+ * One broadcast row (`targetUserId` null) visible to STUDENTs — no fan-out, so
+ * student count doesn't matter. `audience` decides whether students who sign up
+ * later also see it (`ALL_STUDENTS`) or only those registered at send time
+ * (`CURRENT_STUDENTS`, the default). Not best-effort: the admin compose route
+ * awaits this and surfaces failure.
  */
 export async function broadcastToStudents(params: {
   title: string;
   body: string;
   href?: string;
   createdById: string;
+  audience?: "CURRENT_STUDENTS" | "ALL_STUDENTS";
 }) {
   return db.notification.create({
     data: {
@@ -46,6 +49,7 @@ export async function broadcastToStudents(params: {
       title: params.title,
       body: params.body,
       href: params.href,
+      audience: params.audience ?? "CURRENT_STUDENTS",
     },
   });
 }

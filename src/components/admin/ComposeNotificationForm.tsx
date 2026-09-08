@@ -5,10 +5,26 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
 
+type Audience = "CURRENT_STUDENTS" | "ALL_STUDENTS";
+
+const AUDIENCE_OPTIONS: { value: Audience; label: string; hint: string }[] = [
+  {
+    value: "CURRENT_STUDENTS",
+    label: "الطلاب الحاليون فقط",
+    hint: "لن يظهر لمن ينضم إلى المنصة بعد الآن",
+  },
+  {
+    value: "ALL_STUDENTS",
+    label: "كل الطلاب، حتى من ينضم لاحقًا",
+    hint: "مناسب للإرشادات الدائمة التي يجب أن يراها كل طالب جديد",
+  },
+];
+
 export function ComposeNotificationForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [audience, setAudience] = useState<Audience>("CURRENT_STUDENTS");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -19,7 +35,7 @@ export function ComposeNotificationForm() {
     const res = await fetch("/api/notifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, message }),
+      body: JSON.stringify({ title, message, audience }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -29,9 +45,14 @@ export function ComposeNotificationForm() {
       return;
     }
 
-    toast.success("تم إرسال الإشعار إلى جميع الطلاب.");
+    toast.success(
+      audience === "ALL_STUDENTS"
+        ? "تم إرسال الإشعار لكل الطلاب، بمن فيهم من ينضم لاحقًا."
+        : "تم إرسال الإشعار للطلاب الحاليين.",
+    );
     setTitle("");
     setMessage("");
+    setAudience("CURRENT_STUDENTS");
     router.refresh();
   }
 
@@ -69,6 +90,33 @@ export function ComposeNotificationForm() {
           {message.length} / 2000
         </span>
       </div>
+
+      <fieldset className="space-y-2">
+        <legend className="mb-1.5 text-sm text-slate-300">من يرى هذا الإشعار؟</legend>
+        {AUDIENCE_OPTIONS.map((opt) => (
+          <label
+            key={opt.value}
+            className={`flex cursor-pointer gap-3 rounded-lg border p-3 transition ${
+              audience === opt.value
+                ? "border-gold-400/60 bg-gold-400/5"
+                : "border-white/15 hover:border-white/25"
+            }`}
+          >
+            <input
+              type="radio"
+              name="audience"
+              value={opt.value}
+              checked={audience === opt.value}
+              onChange={() => setAudience(opt.value)}
+              className="mt-0.5 accent-gold-400"
+            />
+            <span>
+              <span className="block text-sm font-medium text-white">{opt.label}</span>
+              <span className="block text-xs text-slate-400">{opt.hint}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
 
       <button
         type="submit"
