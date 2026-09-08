@@ -1,12 +1,13 @@
 import type { NextConfig } from "next";
 
-// Report-Only for now: the browser logs violations to the console but blocks
-// nothing, so a wrong directive can't take the site down. Once the live site
-// is confirmed clean, rename the header to `Content-Security-Policy` to enforce.
-// 'unsafe-inline' on script/style is the pragmatic choice for a Next app with
-// no nonce pipeline (Next's hydration bootstrap + framer-motion inline styles);
-// the value still adds object-src 'none', base-uri, frame-ancestors, and an
-// external-script lockdown.
+// Enforcing as of 2026-09-08 — verified clean on the live site in Report-Only
+// mode first (no violations across home / course / lesson-with-video /
+// dashboard). 'unsafe-inline' on script/style is the pragmatic choice for a
+// Next app with no nonce pipeline (Next's hydration bootstrap + framer-motion
+// inline styles); the value still adds object-src 'none', base-uri,
+// frame-ancestors, upgrade-insecure-requests, and an external-script lockdown.
+// If a new integration breaks, switch the header key back to
+// `Content-Security-Policy-Report-Only`, add its host, re-verify, re-enforce.
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://www.youtube.com", // YouTube IFrame API (lesson video progress)
@@ -45,7 +46,7 @@ const nextConfig: NextConfig = {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
           },
-          { key: "Content-Security-Policy-Report-Only", value: csp },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];
