@@ -11,6 +11,7 @@ import { AddResourceForm } from "@/components/admin/AddResourceForm";
 import { DeleteResourceButton } from "@/components/admin/DeleteResourceButton";
 import { CreateQuizButton } from "@/components/admin/CreateQuizButton";
 import { AddQuestionForm } from "@/components/admin/AddQuestionForm";
+import { QuizSettingsForm } from "@/components/admin/QuizSettingsForm";
 import { BulkQuestionsUpload } from "@/components/admin/BulkQuestionsUpload";
 import { DeleteQuestionButton } from "@/components/admin/DeleteQuestionButton";
 import { DeleteQuizButton } from "@/components/admin/DeleteQuizButton";
@@ -140,6 +141,10 @@ export default async function EditLessonPage({
           </div>
         ) : (
           <AddQuestionForm quizId={lesson.quiz.id} />
+        )}
+
+        {lesson.quiz && (
+          <QuizSettingsForm quizId={lesson.quiz.id} timeLimitSec={lesson.quiz.timeLimitSec} />
         )}
 
         <BulkQuestionsUpload lessonId={lesson.id} />

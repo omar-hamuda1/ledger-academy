@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { ClipboardList, ArrowLeft } from "lucide-react";
+import { ClipboardList, ArrowLeft, Timer } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +42,7 @@ export default async function StudentQuizzesPage() {
           lessonTitle: lesson.title,
           quizId: lesson.quiz!.id,
           questionCount: lesson.quiz!.questions.length,
+          timeLimitSec: lesson.quiz!.timeLimitSec,
         }))
     )
   );
@@ -87,7 +88,15 @@ export default async function StudentQuizzesPage() {
                 <div>
                   <p className="text-xs text-blue-400">{entry.courseTitle}</p>
                   <h2 className="font-bold text-white">{entry.lessonTitle}</h2>
-                  <p className="mt-1 text-sm text-slate-400">{entry.questionCount} أسئلة</p>
+                  <p className="mt-1 flex items-center gap-2 text-sm text-slate-400">
+                    <span>{entry.questionCount} أسئلة</span>
+                    {entry.timeLimitSec && (
+                      <span className="flex items-center gap-1 text-gold-400">
+                        <Timer size={13} />
+                        {Math.round(entry.timeLimitSec / 60)} دقيقة
+                      </span>
+                    )}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-4">

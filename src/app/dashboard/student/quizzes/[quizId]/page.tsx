@@ -57,7 +57,7 @@ export default async function QuizPage({
         اختبار: {quiz.lesson.title}
       </h1>
 
-      <QuizTakerForm quizId={quiz.id} questions={questions} />
+      <QuizTakerForm quizId={quiz.id} questions={questions} timeLimitSec={quiz.timeLimitSec} />
     </div>
   );
 }

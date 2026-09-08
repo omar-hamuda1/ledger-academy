@@ -1,18 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
-import { CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, Timer } from "lucide-react";
 
 type Option = { id: string; text: string };
 type Question = { id: string; text: string; options: Option[] };
 type QuestionResult = { questionId: string; selectedId: string | null; correctId: string; isCorrect: boolean };
 
-export function QuizTakerForm({ quizId, questions }: { quizId: string; questions: Question[] }) {
+function mmss(total: number) {
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+export function QuizTakerForm({
+  quizId,
+  questions,
+  timeLimitSec,
+}: {
+  quizId: string;
+  questions: Question[];
+  timeLimitSec?: number | null;
+}) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(timeLimitSec ?? null);
   const [result, setResult] = useState<{
     score: number;
     correctCount: number;
@@ -20,15 +36,22 @@ export function QuizTakerForm({ quizId, questions }: { quizId: string; questions
     results: QuestionResult[];
   } | null>(null);
 
+  const deadlineRef = useRef<number | null>(
+    timeLimitSec ? Date.now() + timeLimitSec * 1000 : null,
+  );
+  // Kept fresh each render so the interval always calls the latest closure.
+  const autoSubmitRef = useRef<() => void>(() => {});
+
   function selectAnswer(questionId: string, optionId: string) {
     if (result) return;
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitAnswers(auto = false) {
+    if (loading || result) return;
     setError(null);
     setLoading(true);
+    if (auto) setTimedOut(true);
 
     const res = await fetch(`/api/quizzes/${quizId}/attempts`, {
       method: "POST",
@@ -40,6 +63,7 @@ export function QuizTakerForm({ quizId, questions }: { quizId: string; questions
 
     if (!res.ok) {
       setError("تعذّر إرسال الاختبار.");
+      if (auto) setTimedOut(false);
       return;
     }
 
@@ -67,9 +91,36 @@ export function QuizTakerForm({ quizId, questions }: { quizId: string; questions
   function handleRetry() {
     setResult(null);
     setAnswers({});
+    setError(null);
+    setTimedOut(false);
+    if (timeLimitSec) {
+      deadlineRef.current = Date.now() + timeLimitSec * 1000;
+      setRemaining(timeLimitSec);
+    }
   }
 
+  autoSubmitRef.current = () => {
+    void submitAnswers(true);
+  };
+
+  // Countdown for a timed quiz: tick every second, auto-submit at zero.
+  useEffect(() => {
+    if (deadlineRef.current == null || result) return;
+    const id = setInterval(() => {
+      const left = Math.max(0, Math.round((deadlineRef.current! - Date.now()) / 1000));
+      setRemaining(left);
+      if (left <= 0) {
+        clearInterval(id);
+        autoSubmitRef.current();
+      }
+    }, 1000);
+    return () => clearInterval(id);
+    // re-arm after a retry (new deadline) — result flips to null then
+  }, [result]);
+
   const resultByQuestion = new Map(result?.results.map((r) => [r.questionId, r]));
+  const showTimer = remaining != null && !result;
+  const lowTime = remaining != null && remaining <= 60;
 
   return (
     <div>
@@ -98,7 +149,34 @@ export function QuizTakerForm({ quizId, questions }: { quizId: string; questions
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {showTimer && (
+        <div
+          className={`mb-4 flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold tabular-nums ${
+            lowTime
+              ? "border-red-500/40 bg-red-500/10 text-red-400"
+              : "border-white/10 bg-navy-900/60 text-slate-200"
+          }`}
+          role="timer"
+          aria-live={lowTime ? "assertive" : "off"}
+        >
+          <Timer size={16} />
+          الوقت المتبقّي: {mmss(remaining!)}
+        </div>
+      )}
+
+      {timedOut && !result && (
+        <p className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-center text-sm text-amber-300">
+          انتهى الوقت — يتم إرسال إجاباتك تلقائيًا…
+        </p>
+      )}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submitAnswers();
+        }}
+        className="space-y-4"
+      >
         {questions.map((question, index) => {
           const questionResult = resultByQuestion.get(question.id);
           return (
@@ -135,7 +213,7 @@ export function QuizTakerForm({ quizId, questions }: { quizId: string; questions
                         name={question.id}
                         checked={isSelected}
                         onChange={() => selectAnswer(question.id, option.id)}
-                        disabled={!!result}
+                        disabled={!!result || loading || timedOut}
                         className="h-4 w-4 accent-gold-400"
                       />
                       {option.text}
@@ -158,10 +236,10 @@ export function QuizTakerForm({ quizId, questions }: { quizId: string; questions
         {!result && (
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || timedOut}
             className="w-full rounded-lg bg-gold-400 py-3 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
           >
-            {loading ? "جارٍ التصحيح..." : "إرسال الإجابات"}
+            {loading || timedOut ? "جارٍ التصحيح..." : "إرسال الإجابات"}
           </button>
         )}
       </form>

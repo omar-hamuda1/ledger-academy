@@ -4,6 +4,12 @@ export const createQuizSchema = z.object({
   lessonId: z.string().min(1),
 });
 
+// PATCH /api/quizzes/[id] — currently just the optional countdown. 1 min – 3 h,
+// or null to remove the timer.
+export const updateQuizSchema = z.object({
+  timeLimitSec: z.number().int().min(60).max(3 * 60 * 60).nullable(),
+});
+
 export const optionSchema = z.object({
   id: z.string().min(1),
   text: z.string().min(1),

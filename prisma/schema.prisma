@@ -356,11 +356,14 @@ model LessonProgress {
 }
 
 model Quiz {
-  id        String        @id @default(cuid())
-  lessonId  String        @unique
-  lesson    Lesson        @relation(fields: [lessonId], references: [id])
-  questions Question[]
-  attempts  QuizAttempt[]
+  id           String        @id @default(cuid())
+  lessonId     String        @unique
+  lesson       Lesson        @relation(fields: [lessonId], references: [id])
+  // null = untimed. When set, the student player counts down and auto-submits
+  // at zero (client-side; not server-enforced).
+  timeLimitSec Int?
+  questions    Question[]
+  attempts     QuizAttempt[]
 }
 
 model Question {
