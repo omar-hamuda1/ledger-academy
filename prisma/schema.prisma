@@ -3,8 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // App runtime uses the pooled URL. Prisma Migrate (migrate deploy/dev, db
+  // push) uses directUrl — the non-pooler Neon endpoint — because acquiring a
+  // session-level `pg_advisory_lock` over the transaction pooler times out
+  // (P1002). See https://pris.ly/d/migrate-advisory-locking.
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {
