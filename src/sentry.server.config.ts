@@ -11,5 +11,6 @@ if (dsn) {
     tracesSampleRate: 0.1,
     // Students are minors — don't ship IPs / request bodies by default.
     sendDefaultPii: false,
+    debug: process.env.SENTRY_DEBUG === "1",
   });
 }
