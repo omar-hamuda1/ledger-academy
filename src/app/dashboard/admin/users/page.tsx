@@ -85,7 +85,7 @@ export default async function AdminUsersPage({
                         </span>
                         <span className="flex items-center gap-2">
                           {user.name}
-                          {isSelf && <span className="text-[11px] text-slate-500">(أنت)</span>}
+                          {isSelf && <span className="text-[11px] text-slate-400">(أنت)</span>}
                           {user.disabledAt && (
                             <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-400">
                               معطّل
@@ -105,7 +105,7 @@ export default async function AdminUsersPage({
                     <td className="px-4 py-3 text-slate-400">{dateFmt.format(user.createdAt)}</td>
                     <td className="px-4 py-3">
                       {isSelf ? (
-                        <span className="block text-left text-[11px] text-slate-600">—</span>
+                        <span className="block text-left text-[11px] text-slate-400">—</span>
                       ) : (
                         <UserRowActions
                           userId={user.id}

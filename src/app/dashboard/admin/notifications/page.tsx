@@ -65,7 +65,7 @@ export default async function AdminNotificationsPage({
               <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-300">
                 {n.body}
               </p>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-slate-400">
                 {dateFmt.format(n.createdAt)}
                 {n.createdBy?.name ? ` · ${n.createdBy.name}` : ""}
               </p>

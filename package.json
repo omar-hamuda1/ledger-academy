@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "admin:recover": "tsx scripts/admin-recovery.ts",
     "shots": "node scripts/shots.mjs",
-    "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "prisma skills sync || exit 0",
+    "a11y": "node scripts/a11y.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",
@@ -42,11 +43,13 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axe-core": "^4.13.0",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",

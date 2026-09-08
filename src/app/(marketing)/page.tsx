@@ -324,7 +324,7 @@ export default async function LandingPage() {
               {preview.modules.slice(0, 4).map((module, i) => (
                 <div
                   key={module.id}
-                  className={`overflow-hidden rounded-card border border-white/10 bg-navy-900/60 ${i > 0 ? "opacity-70" : ""}`}
+                  className="overflow-hidden rounded-card border border-white/10 bg-navy-900/60"
                 >
                   <div className="flex items-center justify-between border-b border-white/[0.06] bg-gold-400/[0.06] px-5 py-4">
                     <div className="flex items-center gap-3">

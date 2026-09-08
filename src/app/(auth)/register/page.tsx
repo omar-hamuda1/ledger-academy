@@ -134,11 +134,11 @@ export default function RegisterPage() {
 
           <p className="text-center text-xs text-slate-400">
             بإنشاء حساب، أنت توافق على{" "}
-            <Link href="/terms" className="text-gold-400 hover:underline">
+            <Link href="/terms" className="text-gold-400 underline">
               شروط الاستخدام
             </Link>{" "}
             و
-            <Link href="/privacy" className="text-gold-400 hover:underline">
+            <Link href="/privacy" className="text-gold-400 underline">
               سياسة الخصوصية
             </Link>
             .
@@ -146,7 +146,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-slate-400">
             لديك حساب بالفعل؟{" "}
-            <Link href="/login" className="font-semibold text-gold-400 hover:underline">
+            <Link href="/login" className="font-semibold text-gold-400 underline">
               تسجيل الدخول
             </Link>
           </p>

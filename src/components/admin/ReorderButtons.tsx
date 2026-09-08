@@ -38,7 +38,7 @@ export function ReorderButtons({
   }
 
   const btn =
-    "flex h-7 w-6 items-center justify-center rounded text-slate-500 transition hover:bg-white/10 hover:text-gold-400 disabled:pointer-events-none disabled:opacity-25";
+    "flex h-7 w-6 items-center justify-center rounded text-slate-400 transition hover:bg-white/10 hover:text-gold-400 disabled:pointer-events-none disabled:opacity-25";
 
   return (
     <span className="flex flex-col">

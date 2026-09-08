@@ -99,7 +99,7 @@ export default async function PrivacyPolicyPage() {
             <p>
               يمكنك في أي وقت طلب الاطلاع على بياناتك المخزّنة لدينا، أو تعديلها، أو طلب حذف حسابك
               بالكامل، عبر التواصل معنا على{" "}
-              <a href={`mailto:${settings.contactEmail}`} className="text-gold-400 hover:underline">
+              <a href={`mailto:${settings.contactEmail}`} className="text-gold-400 underline">
                 {settings.contactEmail}
               </a>
               .

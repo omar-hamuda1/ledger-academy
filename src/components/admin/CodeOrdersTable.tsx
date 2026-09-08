@@ -131,7 +131,7 @@ export function CodeOrdersTable({ rows }: { rows: CodeOrderRow[] }) {
               </td>
               <td className="px-4 py-3">
                 {row.status !== "PENDING" ? (
-                  <span className="text-xs text-slate-500">—</span>
+                  <span className="text-xs text-slate-400">—</span>
                 ) : rejectingId === row.id ? (
                   <div className="flex w-56 flex-col gap-2">
                     <textarea

@@ -34,6 +34,7 @@ export function PrepaidCodesFilters({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <select
+        aria-label="تصفية حسب الكورس"
         value={courseId ?? ""}
         onChange={(e) => apply({ courseId: e.target.value || undefined })}
         className="rounded-lg border border-white/15 bg-navy-950 px-3 py-2 text-sm text-white focus:border-gold-400 focus:outline-none"

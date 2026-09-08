@@ -111,7 +111,7 @@ export default async function AdminCodeOrdersPage({
               }`}
             >
               {s.label}
-              <span className="mr-1.5 text-xs text-slate-500">
+              <span className="mr-1.5 text-xs text-slate-400">
                 {(counts[s.key] ?? 0).toLocaleString("ar-EG")}
               </span>
             </a>

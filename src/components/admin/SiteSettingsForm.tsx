@@ -86,6 +86,7 @@ export function SiteSettingsForm({
             <label className="mb-1.5 block text-sm text-slate-300">البريد الإلكتروني</label>
             <input
               type="email"
+              aria-label="البريد الإلكتروني للتواصل"
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               dir="ltr"
@@ -96,6 +97,7 @@ export function SiteSettingsForm({
             <label className="mb-1.5 block text-sm text-slate-300">رقم الهاتف</label>
             <input
               type="text"
+              aria-label="رقم الهاتف للتواصل"
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
               dir="ltr"

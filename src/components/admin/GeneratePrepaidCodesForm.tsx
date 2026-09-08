@@ -67,6 +67,7 @@ export function GeneratePrepaidCodesForm({
         <div>
           <label className="mb-1.5 block text-sm text-slate-300">الكورس</label>
           <select
+            aria-label="الكورس"
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
             className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white focus:border-gold-400 focus:outline-none"
@@ -85,6 +86,7 @@ export function GeneratePrepaidCodesForm({
           </label>
           <input
             type="number"
+            aria-label={`عدد الأكواد (حتى ${MAX_BATCH})`}
             min={1}
             max={MAX_BATCH}
             value={quantity}

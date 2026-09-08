@@ -88,7 +88,7 @@ export function PrepaidCodesTable({ rows }: { rows: PrepaidCodeRow[] }) {
                     type="button"
                     onClick={() => copy(row)}
                     aria-label="نسخ الكود"
-                    className="text-slate-500 transition hover:text-gold-400"
+                    className="text-slate-400 transition hover:text-gold-400"
                   >
                     {copiedId === row.id ? <Check size={13} /> : <Copy size={13} />}
                   </button>
@@ -129,7 +129,7 @@ export function PrepaidCodesTable({ rows }: { rows: PrepaidCodeRow[] }) {
                     onClick={() => remove(row)}
                     disabled={deletingId === row.id}
                     aria-label="حذف الكود"
-                    className="text-slate-500 transition hover:text-red-400 disabled:opacity-40"
+                    className="text-slate-400 transition hover:text-red-400 disabled:opacity-40"
                   >
                     <Trash2 size={14} />
                   </button>

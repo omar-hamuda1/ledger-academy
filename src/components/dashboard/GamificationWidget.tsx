@@ -47,7 +47,11 @@ export function GamificationWidget({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.25, delay: 0.1 + index * 0.05 }}
           >
-            <Badge variant={achievement.achieved ? "default" : "outline"} className={achievement.achieved ? "" : "opacity-40"}>
+            {/* unearned: visually secondary but still AA-legible (opacity would tank contrast) */}
+            <Badge
+              variant={achievement.achieved ? "default" : "outline"}
+              className={achievement.achieved ? "" : "border-white/10 bg-transparent text-slate-400"}
+            >
               {achievement.label}
             </Badge>
           </motion.div>

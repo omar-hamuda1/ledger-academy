@@ -62,7 +62,7 @@ export default async function TermsOfServicePage() {
               إلكتروني آمن. بما أن الكورسات محتوى رقمي يُتاح الوصول إليه فور إتمام الدفع، لا يوجد
               استرداد تلقائي بعد الاشتراك؛ إذا واجهت مشكلة في الدفع أو الوصول للمحتوى، تواصل معنا
               على{" "}
-              <a href={`mailto:${settings.contactEmail}`} className="text-gold-400 hover:underline">
+              <a href={`mailto:${settings.contactEmail}`} className="text-gold-400 underline">
                 {settings.contactEmail}
               </a>{" "}
               وسنُراجع طلبك.

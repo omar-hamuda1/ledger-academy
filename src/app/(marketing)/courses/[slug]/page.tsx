@@ -93,7 +93,7 @@ export default async function CourseDetailPage({
       {/* hero band */}
       <div className="border-b border-white/10 bg-navy-900/40">
         <div className="mx-auto max-w-6xl px-6 pt-6">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             <Link href="/courses" className="transition hover:text-gold-400">
               الكورسات
             </Link>
@@ -159,7 +159,7 @@ export default async function CourseDetailPage({
                         الوحدة {index + 1}: {module.title}
                       </h3>
                     </div>
-                    <span className="shrink-0 text-xs text-slate-500">
+                    <span className="shrink-0 text-xs text-slate-400">
                       {module.lessons.length.toLocaleString("ar-EG")} دروس
                     </span>
                   </summary>
@@ -169,13 +169,13 @@ export default async function CourseDetailPage({
                         key={lesson.id}
                         className="flex items-center gap-3 border-b border-white/[0.04] px-5 py-3 last:border-0"
                       >
-                        <PlayCircle size={15} className="shrink-0 text-slate-500" />
+                        <PlayCircle size={15} className="shrink-0 text-slate-400" />
                         <span className="text-sm text-slate-300">{lesson.title}</span>
                         {index === 0 && li === 0 && (
                           <span className="mr-auto shrink-0 text-xs text-gold-400">معاينة</span>
                         )}
                         {lesson.quiz && (
-                          <ClipboardCheck size={14} className="mr-auto shrink-0 text-slate-500" />
+                          <ClipboardCheck size={14} className="mr-auto shrink-0 text-slate-400" />
                         )}
                       </li>
                     ))}

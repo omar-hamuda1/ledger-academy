@@ -69,6 +69,7 @@ export function CreateCourseForm() {
         <label className="mb-1.5 block text-sm text-slate-300">عنوان الكورس</label>
         <input
           type="text"
+          aria-label="عنوان الكورس"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
@@ -82,6 +83,7 @@ export function CreateCourseForm() {
         <input
           type="text"
           value={slug}
+          aria-label="الرابط (slug)"
           onChange={(e) => setSlug(slugify(e.target.value))}
           required
           dir="ltr"
@@ -96,6 +98,7 @@ export function CreateCourseForm() {
       <div>
         <label className="mb-1.5 block text-sm text-slate-300">الوصف</label>
         <textarea
+          aria-label="وصف الكورس"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
@@ -108,6 +111,7 @@ export function CreateCourseForm() {
         <div>
           <label className="mb-1.5 block text-sm text-slate-300">الصف الدراسي</label>
           <select
+            aria-label="الصف الدراسي"
             value={grade}
             onChange={(e) => setGrade(e.target.value)}
             className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white focus:border-gold-400 focus:outline-none"
@@ -124,6 +128,7 @@ export function CreateCourseForm() {
           <label className="mb-1.5 block text-sm text-slate-300">السعر (ج.م، 0 = مجاني)</label>
           <input
             type="number"
+            aria-label="السعر بالجنيه"
             min={0}
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
