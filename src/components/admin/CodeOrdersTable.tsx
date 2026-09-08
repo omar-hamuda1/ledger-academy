@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, X, Inbox, ImageOff } from "lucide-react";
+import { Check, X, Inbox, ImageOff, Copy } from "lucide-react";
 import { formatCode } from "@/lib/prepaid-codes";
 
 export type CodeOrderRow = {
@@ -12,7 +12,9 @@ export type CodeOrderRow = {
   studentEmail: string;
   studentPhone: string;
   courseTitle: string;
-  paymentNote: string;
+  coursePrice: number;
+  paymentReference: string | null;
+  paymentNote: string | null;
   proofUrl: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
   rejectionReason: string | null;
@@ -22,6 +24,7 @@ export type CodeOrderRow = {
 };
 
 const dateFmt = new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+const egp = (n: number) => `${n.toLocaleString("ar-EG")} ج.م`;
 
 const STATUS_BADGE: Record<CodeOrderRow["status"], { label: string; cls: string }> = {
   PENDING: { label: "قيد المراجعة", cls: "bg-gold-400/10 text-gold-400" },
@@ -34,18 +37,33 @@ export function CodeOrdersTable({ rows }: { rows: CodeOrderRow[] }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [approveChecked, setApproveChecked] = useState(false);
+
+  function copyRef(ref: string) {
+    navigator.clipboard?.writeText(ref).then(
+      () => toast.success("تم نسخ رقم العملية"),
+      () => {},
+    );
+  }
 
   async function review(id: string, action: "approve" | "reject", rejectionReason?: string) {
     setBusyId(id);
     const res = await fetch(`/api/code-orders/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, ...(rejectionReason ? { rejectionReason } : {}) }),
+      body: JSON.stringify(
+        action === "approve"
+          ? { action, verified: true }
+          : { action, ...(rejectionReason ? { rejectionReason } : {}) },
+      ),
     });
     const data = await res.json().catch(() => ({}));
     setBusyId(null);
     setRejectingId(null);
     setReason("");
+    setApprovingId(null);
+    setApproveChecked(false);
 
     if (!res.ok) {
       toast.error(data.error ?? "تعذّرت العملية.");
@@ -71,7 +89,7 @@ export function CodeOrdersTable({ rows }: { rows: CodeOrderRow[] }) {
           <tr className="border-b border-white/10 text-slate-400">
             <th className="px-4 py-3 font-semibold">الطالب</th>
             <th className="px-4 py-3 font-semibold">الكورس</th>
-            <th className="px-4 py-3 font-semibold">بيانات الدفع</th>
+            <th className="px-4 py-3 font-semibold">رقم العملية والمبلغ</th>
             <th className="px-4 py-3 font-semibold">إثبات الدفع</th>
             <th className="px-4 py-3 font-semibold">التاريخ</th>
             <th className="px-4 py-3 font-semibold">الحالة</th>
@@ -93,7 +111,26 @@ export function CodeOrdersTable({ rows }: { rows: CodeOrderRow[] }) {
               </td>
               <td className="px-4 py-3 text-slate-300">{row.courseTitle}</td>
               <td className="max-w-xs px-4 py-3 text-slate-300">
-                <p className="whitespace-pre-line break-words">{row.paymentNote}</p>
+                {row.paymentReference ? (
+                  <button
+                    type="button"
+                    onClick={() => copyRef(row.paymentReference!)}
+                    dir="ltr"
+                    title="نسخ رقم العملية"
+                    className="flex items-center gap-1.5 font-mono text-sm text-white transition hover:text-gold-400"
+                  >
+                    {row.paymentReference}
+                    <Copy size={12} className="shrink-0 opacity-60" />
+                  </button>
+                ) : (
+                  <span className="text-xs text-slate-500">— بدون رقم عملية —</span>
+                )}
+                <p className="mt-0.5 text-xs text-slate-400">المتوقع: {egp(row.coursePrice)}</p>
+                {row.paymentNote && (
+                  <p className="mt-1 whitespace-pre-line break-words text-xs text-slate-400">
+                    {row.paymentNote}
+                  </p>
+                )}
                 {row.issuedCode && (
                   <p className="mt-1 font-mono text-xs text-gold-400">
                     {formatCode(row.issuedCode)}
@@ -162,15 +199,60 @@ export function CodeOrdersTable({ rows }: { rows: CodeOrderRow[] }) {
                       </button>
                     </div>
                   </div>
+                ) : approvingId === row.id ? (
+                  <div className="flex w-64 flex-col gap-2">
+                    <p className="text-xs text-slate-300">
+                      تأكد من وصول{" "}
+                      <span className="font-bold text-white">{egp(row.coursePrice)}</span>
+                      {row.paymentReference && (
+                        <>
+                          {" "}
+                          بالمرجع{" "}
+                          <span dir="ltr" className="font-mono text-white">
+                            {row.paymentReference}
+                          </span>
+                        </>
+                      )}{" "}
+                      في حساب إنستاباي.
+                    </p>
+                    <label className="flex items-start gap-2 text-xs text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={approveChecked}
+                        onChange={(e) => setApproveChecked(e.target.checked)}
+                        className="mt-0.5 accent-gold-400"
+                      />
+                      تأكدت من وصول التحويل بنفس المبلغ في حسابنا
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={!approveChecked || busyId === row.id}
+                        onClick={() => review(row.id, "approve")}
+                        className="rounded-lg bg-emerald-500/90 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+                      >
+                        تأكيد الموافقة
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApprovingId(null);
+                          setApproveChecked(false);
+                        }}
+                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-white/5"
+                      >
+                        إلغاء
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex gap-2">
                     <button
                       type="button"
                       disabled={busyId === row.id}
                       onClick={() => {
-                        if (confirm("الموافقة ستفتح الكورس لهذا الطالب فورًا. متابعة؟")) {
-                          review(row.id, "approve");
-                        }
+                        setApprovingId(row.id);
+                        setApproveChecked(false);
                       }}
                       className="flex items-center gap-1 rounded-lg bg-emerald-500/90 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-emerald-500 disabled:opacity-60"
                     >

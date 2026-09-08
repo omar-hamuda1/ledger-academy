@@ -144,7 +144,11 @@ model CodeOrder {
   course          Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
   status          CodeOrderStatus @default(PENDING)
   studentPhone    String
-  paymentNote     String
+  // InstaPay transaction reference (المرجع). One transfer can back only one
+  // order — the unique index is the anti-reuse guard. Nullable so orders
+  // created before this field stay valid.
+  paymentReference String?        @unique
+  paymentNote     String?
   paymentProofKey String?
   reviewedById    String?
   reviewedBy      User?           @relation("ReviewedCodeOrders", fields: [reviewedById], references: [id])

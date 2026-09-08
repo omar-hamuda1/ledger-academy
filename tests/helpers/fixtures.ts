@@ -64,6 +64,8 @@ export async function createCodeOrder(userId: string, courseId: string) {
       userId,
       courseId,
       studentPhone: "01000000000",
+      // @unique — random 12-digit, mirrors an InstaPay reference.
+      paymentReference: String(Math.floor(1e11 + Math.random() * 9e11)),
       paymentNote: "Vodafone Cash #test",
       paymentProofKey: `proofs/${userId}/${randomUUID()}.jpg`,
     },

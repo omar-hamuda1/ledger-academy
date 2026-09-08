@@ -1,4 +1,5 @@
 import { NextResponse, after } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
   }
 
-  const { courseId, studentPhone, paymentNote, paymentProofKey } = parsed.data;
+  const { courseId, studentPhone, paymentReference, paymentNote, paymentProofKey } = parsed.data;
 
   // The proof must be an object this user uploaded (keys are namespaced by
   // uploader), not an arbitrary string or someone else's key.
@@ -77,9 +78,41 @@ export async function POST(req: Request) {
     return NextResponse.json({ order: pending, alreadyPending: true });
   }
 
-  const order = await db.codeOrder.create({
-    data: { userId, courseId, studentPhone, paymentNote, paymentProofKey },
+  // One transfer backs one order — a reference already on any order (even the
+  // caller's own, on another course) means either a typo or an attempt to
+  // reuse a payment. The @unique index is the race-safe backstop below.
+  const refClash = await db.codeOrder.findFirst({
+    where: { paymentReference },
+    select: { id: true },
   });
+  if (refClash) {
+    return NextResponse.json(
+      { error: "رقم العملية هذا مُستخدم في طلب آخر. تأكد من الرقم أو تواصل مع الدعم." },
+      { status: 409 },
+    );
+  }
+
+  let order;
+  try {
+    order = await db.codeOrder.create({
+      data: {
+        userId,
+        courseId,
+        studentPhone,
+        paymentReference,
+        paymentNote: paymentNote ?? null,
+        paymentProofKey,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { error: "رقم العملية هذا مُستخدم في طلب آخر. تأكد من الرقم أو تواصل مع الدعم." },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
 
   const admins = await db.user.findMany({
     where: { role: "ADMIN" },
@@ -102,8 +135,10 @@ export async function POST(req: Request) {
     `الكورس: ${course.title}\n` +
     `الطالب: ${studentName}\n` +
     `رقم الهاتف: ${studentPhone}\n` +
-    `ملاحظة الدفع: ${paymentNote}\n\n` +
-    `راجع الطلب ووافق عليه:\n${dashboardUrl}`;
+    `رقم العملية (إنستاباي): ${paymentReference}\n` +
+    `المبلغ المتوقع: ${Number(course.price).toLocaleString("ar-EG")} ج.م\n` +
+    (paymentNote ? `ملاحظة: ${paymentNote}\n` : "") +
+    `\nراجع الطلب ووافق عليه:\n${dashboardUrl}`;
   const adminEmails = resolveAdminAlertEmails(
     admins.map((a) => a.email).filter((e): e is string => Boolean(e)),
   );

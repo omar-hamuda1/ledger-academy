@@ -63,6 +63,7 @@ describe("code orders", () => {
     } as never);
 
   const proofFor = (uid: string) => `proofs/${uid}/${uid}-proof.jpg`;
+  const ref = () => String(Math.floor(1e11 + Math.random() * 9e11));
 
   it("rejects a request whose payment-proof key isn't the caller's own", async () => {
     asUser(student.id);
@@ -70,6 +71,7 @@ describe("code orders", () => {
       createReq({
         courseId: paidCourse.id,
         studentPhone: "01000000000",
+        paymentReference: ref(),
         paymentNote: "VC #900",
         paymentProofKey: proofFor("someone-else"),
       }),
@@ -80,7 +82,12 @@ describe("code orders", () => {
   it("rejects a request with no payment-proof key", async () => {
     asUser(student.id);
     const res = await createOrder(
-      createReq({ courseId: paidCourse.id, studentPhone: "01000000000", paymentNote: "VC #901" }),
+      createReq({
+        courseId: paidCourse.id,
+        studentPhone: "01000000000",
+        paymentReference: ref(),
+        paymentNote: "VC #901",
+      }),
     );
     expect(res.status).toBe(400);
   });
@@ -91,6 +98,7 @@ describe("code orders", () => {
       createReq({
         courseId: freeCourse.id,
         studentPhone: "01000000000",
+        paymentReference: ref(),
         paymentNote: "n/a",
         paymentProofKey: proofFor(student.id),
       }),
@@ -103,6 +111,7 @@ describe("code orders", () => {
     const body = {
       courseId: paidCourse.id,
       studentPhone: "01234567890",
+      paymentReference: ref(),
       paymentNote: "VC #111",
       paymentProofKey: proofFor(student.id),
     };
@@ -122,7 +131,7 @@ describe("code orders", () => {
   it("non-admin cannot review an order", async () => {
     const order = await createCodeOrder(student.id, paidCourse.id);
     asUser(student.id);
-    const res = await reviewOrder(reviewReq({ action: "approve" }), {
+    const res = await reviewOrder(reviewReq({ action: "approve", verified: true }), {
       params: Promise.resolve({ id: order.id }),
     });
     expect(res.status).toBe(403);
@@ -134,7 +143,7 @@ describe("code orders", () => {
     const order = await createCodeOrder(buyer.id, paidCourse.id);
 
     asAdmin();
-    const res = await reviewOrder(reviewReq({ action: "approve" }), {
+    const res = await reviewOrder(reviewReq({ action: "approve", verified: true }), {
       params: Promise.resolve({ id: order.id }),
     });
     expect(res.status).toBe(200);
@@ -155,7 +164,7 @@ describe("code orders", () => {
     const note = await db.notification.findFirst({ where: { targetUserId: buyer.id } });
     expect(note?.title).toContain("تفعيل");
 
-    const again = await reviewOrder(reviewReq({ action: "approve" }), {
+    const again = await reviewOrder(reviewReq({ action: "approve", verified: true }), {
       params: Promise.resolve({ id: order.id }),
     });
     expect(again.status).toBe(409);
@@ -185,6 +194,53 @@ describe("code orders", () => {
 
     const note = await db.notification.findFirst({ where: { targetUserId: buyer.id } });
     expect(note?.title).toContain("رفض");
+
+    await cleanupUser(buyer.id);
+  });
+
+  it("rejects a second order that reuses a payment reference", async () => {
+    const a = await createUser("STUDENT");
+    const b = await createUser("STUDENT");
+    const sharedRef = ref();
+
+    asUser(a.id);
+    const first = await createOrder(
+      createReq({
+        courseId: paidCourse.id,
+        studentPhone: "01000000000",
+        paymentReference: sharedRef,
+        paymentProofKey: proofFor(a.id),
+      }),
+    );
+    expect(first.status).toBe(201);
+
+    asUser(b.id);
+    const second = await createOrder(
+      createReq({
+        courseId: paidCourse.id,
+        studentPhone: "01000000000",
+        paymentReference: sharedRef,
+        paymentProofKey: proofFor(b.id),
+      }),
+    );
+    expect(second.status).toBe(409);
+
+    await cleanupUser(a.id);
+    await cleanupUser(b.id);
+  });
+
+  it("approve requires an explicit verified flag", async () => {
+    const buyer = await createUser("STUDENT");
+    const order = await createCodeOrder(buyer.id, paidCourse.id);
+
+    asAdmin();
+    const res = await reviewOrder(reviewReq({ action: "approve" }), {
+      params: Promise.resolve({ id: order.id }),
+    });
+    expect(res.status).toBe(400);
+
+    const unchanged = await db.codeOrder.findUnique({ where: { id: order.id } });
+    expect(unchanged?.status).toBe("PENDING");
 
     await cleanupUser(buyer.id);
   });

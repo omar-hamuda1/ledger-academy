@@ -36,7 +36,7 @@ export default async function AdminCodeOrdersPage({
         take: PAGE_SIZE,
         include: {
           user: { select: { name: true, email: true } },
-          course: { select: { title: true } },
+          course: { select: { title: true, price: true } },
           prepaidCode: { select: { code: true } },
         },
       }),
@@ -80,6 +80,8 @@ export default async function AdminCodeOrdersPage({
     studentEmail: o.user.email,
     studentPhone: o.studentPhone,
     courseTitle: o.course.title,
+    coursePrice: Number(o.course.price),
+    paymentReference: o.paymentReference,
     paymentNote: o.paymentNote,
     proofUrl: proofUrls.get(o.id) ?? null,
     status: o.status,

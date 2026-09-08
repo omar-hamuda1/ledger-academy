@@ -104,7 +104,13 @@ export async function PATCH(
       action: "code_order.approve",
       targetType: "CodeOrder",
       targetId: id,
-      metadata: { courseId: order.courseId, studentId: order.userId, note: "already enrolled" },
+      metadata: {
+        courseId: order.courseId,
+        studentId: order.userId,
+        paymentReference: order.paymentReference,
+        verified: true,
+        note: "already enrolled",
+      },
     });
     await notify({
       userId: order.userId,
@@ -159,7 +165,12 @@ export async function PATCH(
       action: "code_order.approve",
       targetType: "CodeOrder",
       targetId: id,
-      metadata: { courseId: order.courseId, studentId: order.userId },
+      metadata: {
+        courseId: order.courseId,
+        studentId: order.userId,
+        paymentReference: order.paymentReference,
+        verified: true,
+      },
     });
     await notify({
       userId: order.userId,

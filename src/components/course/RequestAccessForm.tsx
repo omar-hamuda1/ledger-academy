@@ -20,6 +20,7 @@ export function RequestAccessForm({
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [phone, setPhone] = useState("");
+  const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,13 +42,14 @@ export function RequestAccessForm({
     );
   }
 
-  const canSubmit =
-    !!phone.trim() && note.trim().length >= 3 && !!fileName && !loading;
+  const refDigits = reference.replace(/[\s-]/g, "");
+  const refValid = /^\d{8,20}$/.test(refDigits);
+  const canSubmit = !!phone.trim() && refValid && !!fileName && !loading;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const file = fileRef.current?.files?.[0];
-    if (loading || !phone.trim() || note.trim().length < 3 || !file) return;
+    if (loading || !phone.trim() || !refValid || !file) return;
 
     if (file.size > MAX_BYTES) {
       setError("حجم الصورة يجب أن يكون أقل من 5 ميجابايت.");
@@ -75,7 +77,8 @@ export function RequestAccessForm({
       body: JSON.stringify({
         courseId,
         studentPhone: phone,
-        paymentNote: note,
+        paymentReference: refDigits,
+        paymentNote: note.trim() || undefined,
         paymentProofKey: upData.key,
       }),
     });
@@ -102,8 +105,8 @@ export function RequestAccessForm({
         اطلب كودًا للكورس
       </div>
       <p className="mb-3 text-xs text-slate-400">
-        حوّل قيمة الكورس، ثم أرفق صورة التحويل وأرسل رقمك — وسنفعّل الكورس بعد
-        التأكد.
+        حوّل قيمة الكورس عبر إنستاباي، ثم أدخل رقم العملية (المرجع) وأرفق صورة
+        الإيصال — سنطابق التحويل ونفعّل الكورس.
       </p>
 
       {paymentInstructions && (
@@ -121,11 +124,26 @@ export function RequestAccessForm({
           dir="ltr"
           className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-right text-white placeholder:text-slate-600 focus:border-gold-400 focus:outline-none"
         />
+        <div>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={reference}
+            onChange={(e) => setReference(e.target.value.replace(/[^\d\s-]/g, "").slice(0, 24))}
+            placeholder="رقم العملية (المرجع)"
+            dir="ltr"
+            aria-label="رقم العملية من إنستاباي"
+            className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-right text-white placeholder:text-slate-600 focus:border-gold-400 focus:outline-none"
+          />
+          <p className="mt-1 text-[11px] text-slate-500">
+            ستجده في إيصال تحويل إنستاباي باسم «المرجع» — أرقام فقط.
+          </p>
+        </div>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 500))}
           rows={2}
-          placeholder="طريقة الدفع ورقم عملية التحويل"
+          placeholder="ملاحظة (اختياري) — مثلاً: حوّلت من حساب ولي الأمر"
           className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white placeholder:text-slate-600 focus:border-gold-400 focus:outline-none"
         />
 
