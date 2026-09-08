@@ -1,9 +1,11 @@
 import { getServerSession } from "next-auth";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { Users } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { Pagination } from "@/components/admin/Pagination";
 import { UserRowActions } from "@/components/admin/UserRowActions";
+import { UsersFilters } from "@/components/admin/UsersFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -28,21 +30,41 @@ const dateFmt = new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium" });
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; role?: string; status?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, q, role, status } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+
+  const search = (q ?? "").trim();
+  const roleFilter = role === "ADMIN" || role === "STUDENT" ? role : undefined;
+  const statusFilter = status === "active" || status === "disabled" ? status : undefined;
+
+  const where: Prisma.UserWhereInput = {
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+    ...(roleFilter ? { role: roleFilter } : {}),
+    ...(statusFilter === "active" ? { disabledAt: null } : {}),
+    ...(statusFilter === "disabled" ? { disabledAt: { not: null } } : {}),
+  };
+  const hasFilters = Boolean(search || roleFilter || statusFilter);
 
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
 
   const [users, totalCount, viewer] = await Promise.all([
     db.user.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    db.user.count(),
+    db.user.count({ where }),
     currentUserId
       ? db.user.findUnique({ where: { id: currentUserId }, select: { superAdmin: true } })
       : null,
@@ -57,13 +79,22 @@ export default async function AdminUsersPage({
         جميع الحسابات المسجلة على المنصة. يمكنك ترقية مستخدم إلى محاضر أو خفضه، وتعطيل حساب أو إعادة تفعيله.
       </p>
 
+      <UsersFilters q={search || undefined} role={roleFilter} status={statusFilter} />
+
+      <p className="mt-3 text-xs text-slate-400">
+        {totalCount.toLocaleString("ar-EG")}{" "}
+        {hasFilters ? "نتيجة مطابقة" : "حساب"}
+      </p>
+
       {users.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center gap-3 rounded-card border border-white/10 bg-navy-900/60 p-16 text-center shadow-card">
+        <div className="mt-4 flex flex-col items-center gap-3 rounded-card border border-white/10 bg-navy-900/60 p-16 text-center shadow-card">
           <Users size={32} className="text-slate-600" />
-          <p className="text-slate-400">لا يوجد مستخدمون مسجّلون بعد.</p>
+          <p className="text-slate-400">
+            {hasFilters ? "لا توجد حسابات مطابقة لبحثك." : "لا يوجد مستخدمون مسجّلون بعد."}
+          </p>
         </div>
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-card border border-white/10 bg-navy-900/60 shadow-card">
+        <div className="mt-4 overflow-x-auto rounded-card border border-white/10 bg-navy-900/60 shadow-card">
           <table className="w-full text-right text-sm">
             <thead>
               <tr className="border-b border-white/10 text-slate-400">
@@ -136,7 +167,12 @@ export default async function AdminUsersPage({
         </div>
       )}
 
-      <Pagination currentPage={page} totalPages={totalPages} basePath="/dashboard/admin/users" />
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        basePath="/dashboard/admin/users"
+        query={{ q: search || undefined, role: roleFilter, status: statusFilter }}
+      />
     </div>
   );
 }
