@@ -11,6 +11,7 @@ import { AddResourceForm } from "@/components/admin/AddResourceForm";
 import { DeleteResourceButton } from "@/components/admin/DeleteResourceButton";
 import { CreateQuizButton } from "@/components/admin/CreateQuizButton";
 import { AddQuestionForm } from "@/components/admin/AddQuestionForm";
+import { BulkQuestionsUpload } from "@/components/admin/BulkQuestionsUpload";
 import { DeleteQuestionButton } from "@/components/admin/DeleteQuestionButton";
 import { DeleteQuizButton } from "@/components/admin/DeleteQuizButton";
 
@@ -94,48 +95,54 @@ export default async function EditLessonPage({
         </div>
 
         {!lesson.quiz ? (
-          <CreateQuizButton lessonId={lesson.id} />
+          <p className="text-sm text-slate-400">
+            لا يوجد اختبار لهذا الدرس بعد. أنشئه بزر بالأسفل، أو ارفع ملف أسئلة مباشرة.
+          </p>
+        ) : lesson.quiz.questions.length === 0 ? (
+          <p className="text-sm text-slate-400">لم تُضَف أي أسئلة بعد.</p>
         ) : (
-          <>
-            {lesson.quiz.questions.length === 0 ? (
-              <p className="text-sm text-slate-400">لم تُضَف أي أسئلة بعد.</p>
-            ) : (
-              <ul className="space-y-3">
-                {lesson.quiz.questions.map((question) => {
-                  const options = question.options as QuestionOption[];
-                  return (
-                    <li key={question.id} className="rounded-xl border border-white/10 bg-navy-950/40 p-4">
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <span className="flex items-start gap-2 text-sm font-medium text-white">
-                          <HelpCircle size={16} className="mt-0.5 shrink-0 text-gold-400" />
-                          {question.text}
-                        </span>
-                        <DeleteQuestionButton questionId={question.id} />
-                      </div>
-                      <ul className="space-y-1 pr-6">
-                        {options.map((option) => (
-                          <li
-                            key={option.id}
-                            className={`text-sm ${
-                              option.id === question.correctId
-                                ? "font-semibold text-emerald-400"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {option.id === question.correctId ? "✓ " : "• "}
-                            {option.text}
-                          </li>
-                        ))}
-                      </ul>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-
-            <AddQuestionForm quizId={lesson.quiz.id} />
-          </>
+          <ul className="space-y-3">
+            {lesson.quiz.questions.map((question) => {
+              const options = question.options as QuestionOption[];
+              return (
+                <li key={question.id} className="rounded-xl border border-white/10 bg-navy-950/40 p-4">
+                  <div className="mb-2 flex items-start justify-between gap-2">
+                    <span className="flex items-start gap-2 text-sm font-medium text-white">
+                      <HelpCircle size={16} className="mt-0.5 shrink-0 text-gold-400" />
+                      {question.text}
+                    </span>
+                    <DeleteQuestionButton questionId={question.id} />
+                  </div>
+                  <ul className="space-y-1 pr-6">
+                    {options.map((option) => (
+                      <li
+                        key={option.id}
+                        className={`text-sm ${
+                          option.id === question.correctId
+                            ? "font-semibold text-emerald-400"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        {option.id === question.correctId ? "✓ " : "• "}
+                        {option.text}
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
         )}
+
+        {!lesson.quiz ? (
+          <div className="mt-4">
+            <CreateQuizButton lessonId={lesson.id} />
+          </div>
+        ) : (
+          <AddQuestionForm quizId={lesson.quiz.id} />
+        )}
+
+        <BulkQuestionsUpload lessonId={lesson.id} />
       </div>
 
       {session?.user?.id && (

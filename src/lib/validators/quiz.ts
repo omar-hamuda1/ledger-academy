@@ -23,3 +23,12 @@ export const createQuestionSchema = z
 export const submitAttemptSchema = z.object({
   answers: z.record(z.string(), z.string()),
 });
+
+// Bulk-import questions into a lesson's quiz from an uploaded CSV. The CSV
+// itself is parsed + validated by src/lib/exam-import.ts; this just guards the
+// envelope. 512 KB is ~10x a 200-row Arabic file.
+export const bulkQuestionsSchema = z.object({
+  lessonId: z.string().min(1),
+  csv: z.string().min(1).max(512 * 1024),
+  mode: z.enum(["append", "replace"]).default("append"),
+});
