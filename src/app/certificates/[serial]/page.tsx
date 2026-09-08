@@ -19,6 +19,8 @@ export default async function CertificatePage({
   params: Promise<{ serial: string }>;
 }) {
   const { serial } = await params;
+  // Full origin for the printed "verify at …" line; falls back to a bare path.
+  const verifyBase = (process.env.NEXTAUTH_URL ?? "").replace(/\/$/, "");
 
   const cert = await db.certificate.findUnique({
     where: { serial },
@@ -93,7 +95,7 @@ export default async function CertificatePage({
               {cert.serial}
             </p>
             <p className="text-[10px] text-slate-500 print:text-navy-950" dir="ltr">
-              verify at /certificates/{cert.serial}
+              {verifyBase}/certificates/{cert.serial}
             </p>
           </div>
         </div>
