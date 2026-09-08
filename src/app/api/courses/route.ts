@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { createCourseSchema } from "@/lib/validators/course";
 import { MIN_EGP_PRICE } from "@/lib/pricing";
 import { logAudit } from "@/lib/audit";
+import { revalidateCourseSurfaces } from "@/lib/revalidate";
 
 export async function GET() {
   const courses = await db.course.findMany({
@@ -53,6 +54,8 @@ export async function POST(req: Request) {
     targetId: course.id,
     metadata: { title: course.title, slug: course.slug, price: parsed.data.price },
   });
+
+  revalidateCourseSurfaces();
 
   return NextResponse.json({ course }, { status: 201 });
 }

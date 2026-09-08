@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { updateCourseSchema } from "@/lib/validators/course";
 import { MIN_EGP_PRICE } from "@/lib/pricing";
 import { logAudit } from "@/lib/audit";
+import { revalidateCourseSurfaces } from "@/lib/revalidate";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -43,6 +44,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     targetId: id,
     metadata: parsed.data,
   });
+
+  revalidateCourseSurfaces();
 
   return NextResponse.json({ course });
 }
