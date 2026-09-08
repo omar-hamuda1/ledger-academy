@@ -56,6 +56,10 @@ A full audit on 2026-09-06 found and fixed several real, exploitable bugs. These
 - `serial` is the public id — `/certificates/<serial>` (top-level route, not in `(marketing)`, so the print layout is clean) renders the certificate and doubles as the verification page (unknown serial → "غير صالحة"). Serials use a no-ambiguous-chars alphabet (`generateSerial()`).
 - The certificate shows `course.instructor.name` — note the course-detail page currently hardcodes "محمد حسين" instead of reading the relation; the cert uses the real relation, so keep the instructor user's `name` correct.
 
+## Reviews
+- A `Review` (one per `(userId, courseId)`, rating 1–5 + optional `body`) is written by **enrolled** students only. `POST /api/reviews` upserts — no separate edit endpoint. `hidden` is admin moderation: hidden reviews are excluded from `courseRating` (avg + count) and `courseReviews` (both in `src/lib/reviews.ts`). Public display shows the reviewer's **first name only**.
+- Admin actions on `/api/reviews/[id]`: `PATCH { hidden }` (audit `review.hide`/`review.unhide`), `DELETE` (own review needs no admin; anyone else's is admin-only, audit `review.delete`).
+
 ## Forms & user input
 - **Never auto-derive a URL slug from an Arabic title.** A naive `slugify()` that strips non-`[a-z0-9]` characters removes 100% of Arabic text, so it silently produces a garbage slug like `-` (which the old regex `^[a-z0-9-]+$` accepted as "valid," creating a real course with a broken URL). The course-creation form (`CreateCourseForm.tsx`) requires the admin to type the slug in English directly — don't try to reintroduce auto-fill-from-title. The slug regex (`createCourseSchema`) requires at least one real alphanumeric segment, not just hyphens; keep it that way.
 
