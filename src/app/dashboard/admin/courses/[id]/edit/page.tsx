@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BarChart3 } from "lucide-react";
 import { db } from "@/lib/db";
 import { EditCourseDetailsForm } from "@/components/admin/EditCourseDetailsForm";
 import { CourseRoster, type RosterRow } from "@/components/admin/CourseRoster";
@@ -34,8 +34,19 @@ export default async function EditCoursePage({ params }: { params: Promise<{ id:
         العودة إلى إدارة الكورسات
       </Link>
 
-      <h1 className="text-2xl font-extrabold text-white">تعديل الكورس</h1>
-      <p className="mt-2 text-slate-400">{course.title}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold text-white">تعديل الكورس</h1>
+          <p className="mt-2 text-slate-400">{course.title}</p>
+        </div>
+        <Link
+          href={`/dashboard/admin/courses/${course.id}/insights`}
+          className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-sm font-bold text-slate-200 transition hover:border-gold-400/40 hover:text-gold-400"
+        >
+          <BarChart3 size={16} />
+          تحليل تقدّم الطلاب
+        </Link>
+      </div>
 
       <div className="mt-8 max-w-xl">
         <EditCourseDetailsForm

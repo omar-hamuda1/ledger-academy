@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GraduationCap, PlusCircle, Pencil } from "lucide-react";
+import { GraduationCap, PlusCircle, Pencil, BarChart3 } from "lucide-react";
 import { db } from "@/lib/db";
 import { EditCoursePriceForm } from "@/components/admin/EditCoursePriceForm";
 import { Pagination } from "@/components/admin/Pagination";
@@ -65,6 +65,13 @@ export default async function AdminCoursesPage({
                     className="text-slate-400 transition hover:text-gold-400"
                   >
                     <Pencil size={14} />
+                  </Link>
+                  <Link
+                    href={`/dashboard/admin/courses/${course.id}/insights`}
+                    aria-label="تحليل تقدّم الطلاب"
+                    className="text-slate-400 transition hover:text-gold-400"
+                  >
+                    <BarChart3 size={14} />
                   </Link>
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
