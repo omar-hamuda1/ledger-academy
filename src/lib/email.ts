@@ -1,22 +1,44 @@
-const apiKey = process.env.BREVO_API_KEY;
-const fromAddress = process.env.EMAIL_FROM;
-const fromName = process.env.EMAIL_FROM_NAME || "Ledger Academy";
+import nodemailer, { type Transporter } from "nodemailer";
 
-const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
+const gmailUser = process.env.GMAIL_USER;
+// Google shows the app password as four space-separated groups — tolerate that.
+const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, "");
+const fromName = process.env.EMAIL_FROM_NAME || "Ledger Academy";
+// Gmail rewrites `From` to the authenticated account unless the address is a
+// verified "Send mail as" alias, so default the sender to GMAIL_USER itself.
+const fromAddress = process.env.EMAIL_FROM || gmailUser;
+
+let transporter: Transporter | null = null;
 
 /**
- * Low-level transactional send via Brevo's HTTP API (no SDK — a single
- * `fetch`, same nullable-client pattern as `src/lib/storage.ts` and the
- * Upstash path in `src/lib/rate-limit.ts`). Until BREVO_API_KEY/EMAIL_FROM are
- * set it logs the message to the server console instead, so flows stay
- * testable without a Brevo account.
+ * Gmail SMTP transport, built once per warm instance. Returns null until
+ * GMAIL_USER + GMAIL_APP_PASSWORD are set (same nullable-client pattern as
+ * `src/lib/storage.ts` / the Upstash path in `src/lib/rate-limit.ts`) — flows
+ * then fall back to logging the message to the server console.
  *
- * Throws on a non-2xx Brevo response. The OTP path lets that surface (so
- * `/api/auth/otp/send` returns 500 rather than a false success); best-effort
- * callers like the admin alerts wrap it in try/catch.
- *
- * Brevo free tier: 300 emails/day, no credit card. Verify the `EMAIL_FROM`
- * address as a sender in the Brevo dashboard first.
+ * This is a stopgap: a `@gmail.com` sender lands in spam for many recipients
+ * and Gmail caps at ~500 messages/day. The real path is a custom domain with
+ * SPF/DKIM through a transactional provider — see the deploy docs.
+ */
+function getTransport(): Transporter | null {
+  if (!gmailUser || !gmailAppPassword) return null;
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: gmailUser, pass: gmailAppPassword },
+      // User-facing OTP send awaits this — fail fast rather than hang.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
+    });
+  }
+  return transporter;
+}
+
+/**
+ * Low-level transactional send. Throws on an SMTP failure (the OTP path lets
+ * that surface so `/api/auth/otp/send` returns 500 rather than a false
+ * success; best-effort callers like the admin alerts wrap it in try/catch).
  */
 export async function sendEmail(params: {
   to: string | string[];
@@ -28,32 +50,24 @@ export async function sendEmail(params: {
     .filter(Boolean);
   if (recipients.length === 0) return;
 
-  if (!apiKey || !fromAddress) {
+  const tx = getTransport();
+  if (!tx || !fromAddress) {
     console.log(
       `[EMAIL DEV MODE] to ${recipients.join(", ")}: ${params.subject} — ${params.text}`,
     );
     return;
   }
 
-  const res = await fetch(BREVO_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "api-key": apiKey,
-      "content-type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify({
-      sender: { email: fromAddress, name: fromName },
-      to: recipients.map((email) => ({ email })),
-      subject: params.subject,
-      textContent: params.text,
-    }),
-  });
+  // Subject becomes a header — strip CR/LF defensively even though every
+  // caller passes a fixed string.
+  const subject = params.subject.replace(/[\r\n]+/g, " ").trim();
 
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`Brevo email send failed (${res.status}): ${detail}`);
-  }
+  await tx.sendMail({
+    from: { name: fromName, address: fromAddress },
+    to: recipients,
+    subject,
+    text: params.text,
+  });
 }
 
 export function sendOtpEmail(to: string, code: string): Promise<void> {
@@ -68,7 +82,7 @@ export function sendOtpEmail(to: string, code: string): Promise<void> {
  * Who operational alerts (a new code-order request, etc.) go to.
  * `ADMIN_ALERT_EMAILS` (comma-separated) overrides; otherwise pass the ADMIN
  * users' own addresses. Placeholder seed addresses (`@example.com`) are
- * dropped so they don't bounce against Brevo's sender reputation.
+ * dropped so they don't bounce against the sender's reputation.
  */
 export function resolveAdminAlertEmails(fallback: string[]): string[] {
   const configured = process.env.ADMIN_ALERT_EMAILS;
