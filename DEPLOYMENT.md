@@ -54,8 +54,9 @@ ones by hand.
 | `AWS_REGION` | for uploads | ″ (`eu-central-1`) |
 | `UPSTASH_REDIS_REST_URL` | recommended | Free account at upstash.com (no card). **Without it, rate limiting is effectively off on serverless** — each request can hit a fresh instance with an empty in-memory counter, so the OTP / login / redeem limits don't hold. |
 | `UPSTASH_REDIS_REST_TOKEN` | recommended | ″ |
-| `BREVO_API_KEY` | for real signups | Brevo → SMTP & API → API Keys. Free tier 300 emails/day, no card. Until it's set, OTP emails only `console.log` — invisible on serverless, so **signup / password reset don't work for anyone but a dev reading logs**. |
-| `EMAIL_FROM` | for real signups | A sender address verified in Brevo (Senders, Domains & Dedicated IPs → Senders). |
+| `GMAIL_USER` | for real signups | The Gmail address to send from. Until it's set, OTP emails only `console.log` — invisible on serverless, so **signup / password reset don't work for anyone but a dev reading logs**. |
+| `GMAIL_APP_PASSWORD` | for real signups | Enable 2-Step Verification on that Google account, then create an App Password at myaccount.google.com/apppasswords. 16 chars, spaces OK. **Stopgap** — ~500/day, freemail sender hits spam; replace with a custom domain + SPF/DKIM provider before scaling. |
+| `EMAIL_FROM` | optional | Envelope sender; defaults to `GMAIL_USER` (Gmail rewrites it unless it's a verified "Send mail as" alias). |
 | `EMAIL_FROM_NAME` | optional | Display name on the email; defaults to `Ledger Academy`. |
 
 Do **not** set `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`, or anything from
@@ -82,10 +83,10 @@ push redeploys; a failed build leaves the previous deployment live.
 ## After the first deploy — smoke test on the live URL
 
 - Home / `/courses` / `/pricing` render (ISR pages hit the DB at build).
-- Register a throwaway account. The OTP email is sent via Brevo (transactional
-  sending confirmed live 2026-09-08); check spam, since the sender is still a
-  freemail `@gmail.com` address. If `BREVO_API_KEY` isn't set, use
-  `npm run admin:recover` against prod, or the OTP dev-log, to get in.
+- Register a throwaway account. The OTP email is sent via Gmail SMTP; **check
+  spam**, since the sender is a freemail `@gmail.com` address. If `GMAIL_USER` /
+  `GMAIL_APP_PASSWORD` aren't set, use `npm run admin:recover` against prod, or
+  the OTP dev-log, to get in.
 - Log in → `/dashboard/student` and `/dashboard/admin` load, the notification
   bell polls without errors.
 - Admin: create a course, generate prepaid codes, send a broadcast notification.
