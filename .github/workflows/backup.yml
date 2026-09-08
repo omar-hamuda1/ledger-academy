@@ -1,0 +1,72 @@
+name: DB backup
+
+# Neon's free tier keeps only ~6h of point-in-time recovery. This takes a full
+# logical dump of production every day and keeps it as a downloadable artifact
+# (90-day retention), so a bad delete noticed days later is still recoverable.
+#
+# Setup: add a repo secret BACKUP_DATABASE_URL = the *direct* (non-pooler) prod
+# connection string — the DATABASE_URL_UNPOOLED value from .env, host
+# ep-purple-smoke-...neon.tech WITHOUT "-pooler". pg_dump can't run through
+# PgBouncer. The artifact holds real user data; the repo is private, keep it so.
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # 03:00 UTC daily (~05:00 Cairo, low traffic)
+  workflow_dispatch: {} # manual run, e.g. right after adding the secret
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check secret is set
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          if [ -z "$BACKUP_DATABASE_URL" ]; then
+            echo "::error::BACKUP_DATABASE_URL secret is not set — add the direct (non-pooler) prod connection string. No backup was taken."
+            exit 1
+          fi
+
+      - name: Dump database
+        id: dump
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          FILE="backup-$(date -u +%Y%m%dT%H%M%SZ).dump"
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+          # pg_dump 18 to match Neon's server (18.x); custom format, restorable
+          # with pg_restore. --no-owner/--no-privileges keeps it portable.
+          docker run --rm -e PGCONNECT_TIMEOUT=30 postgres:18-alpine \
+            pg_dump "$BACKUP_DATABASE_URL" --no-owner --no-privileges --format=custom \
+            > "$FILE"
+
+      - name: Verify the dump
+        env:
+          FILE: ${{ steps.dump.outputs.file }}
+        run: |
+          set -euo pipefail
+          test -s "$FILE" || { echo "::error::dump file is empty"; exit 1; }
+          SIZE=$(stat -c%s "$FILE")
+          ENTRIES=$(docker run --rm -v "$PWD:/w" -w /w postgres:18-alpine \
+            pg_restore --list "$FILE" | grep -vc '^;' || echo 0)
+          echo "dump: $FILE  ${SIZE} bytes  ${ENTRIES} archive entries"
+          # A real dump of this schema has dozens of entries; a broken/partial
+          # one has ~0. Guard against silently shipping garbage.
+          [ "$ENTRIES" -ge 20 ] || { echo "::error::only $ENTRIES entries — dump looks incomplete"; exit 1; }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: ${{ steps.dump.outputs.file }}
+          retention-days: 90
+          if-no-files-found: error
