@@ -22,6 +22,8 @@ model User {
   quizAttempts          QuizAttempt[]
   certificates          Certificate[]
   reviews               Review[]
+  lessonQuestions       LessonQuestion[]
+  lessonAnswers         LessonAnswer[]
   coursesOwned          Course[]           @relation("InstructorCourses")
   redeemedCodes         PrepaidCode[]
   codeOrders            CodeOrder[]        @relation("RequestedCodeOrders")
@@ -116,6 +118,39 @@ model Lesson {
   resources Resource[]
   progress  LessonProgress[]
   quiz      Quiz?
+  questions LessonQuestion[]
+}
+
+// Student Q&A tied to a lesson. A question has zero or more answers; an answer
+// from an ADMIN is flagged `byInstructor` for the UI. Both cascade from the
+// lesson, so deleting a lesson takes its Q&A with it.
+model LessonQuestion {
+  id        String         @id @default(cuid())
+  lessonId  String
+  userId    String
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id])
+  body      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  answers   LessonAnswer[]
+
+  @@index([lessonId])
+  @@index([userId])
+}
+
+model LessonAnswer {
+  id           String         @id @default(cuid())
+  questionId   String
+  userId       String
+  question     LessonQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id])
+  body         String
+  byInstructor Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+
+  @@index([questionId])
+  @@index([userId])
 }
 
 model Resource {

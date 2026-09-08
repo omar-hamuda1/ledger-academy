@@ -60,6 +60,11 @@ A full audit on 2026-09-06 found and fixed several real, exploitable bugs. These
 - A `Review` (one per `(userId, courseId)`, rating 1–5 + optional `body`) is written by **enrolled** students only. `POST /api/reviews` upserts — no separate edit endpoint. `hidden` is admin moderation: hidden reviews are excluded from `courseRating` (avg + count) and `courseReviews` (both in `src/lib/reviews.ts`). Public display shows the reviewer's **first name only**.
 - Admin actions on `/api/reviews/[id]`: `PATCH { hidden }` (audit `review.hide`/`review.unhide`), `DELETE` (own review needs no admin; anyone else's is admin-only, audit `review.delete`).
 
+## Lesson Q&A
+- `LessonQuestion` + `LessonAnswer`, both `onDelete: Cascade` from the lesson (so a lesson delete takes its Q&A — no cleanup needed in `/api/lessons/[id]`, unlike `LessonProgress`). An answer from an ADMIN has `byInstructor: true` (set at write time) for the "المحاضر" badge.
+- Participation = **enrolled student or admin** (`lessonQAAccess()` in `src/lib/lesson-qa.ts`). Routes: `POST /api/lessons/[id]/questions`, `POST /api/lesson-questions/[id]/answers`, `DELETE /api/lesson-questions/[id]`, `DELETE /api/lesson-answers/[id]` (own, or any as admin — admin deletes are audit-logged). Ask/answer are rate-limited.
+- A new question `notify()`s all admins (link → the admin lesson editor); a new answer notifies the asker (link → the student lesson player). Shared UI: `LessonQA.tsx` on both the student lesson player and `/dashboard/admin/lessons/[lessonId]`.
+
 ## Forms & user input
 - **Never auto-derive a URL slug from an Arabic title.** A naive `slugify()` that strips non-`[a-z0-9]` characters removes 100% of Arabic text, so it silently produces a garbage slug like `-` (which the old regex `^[a-z0-9-]+$` accepted as "valid," creating a real course with a broken URL). The course-creation form (`CreateCourseForm.tsx`) requires the admin to type the slug in English directly — don't try to reintroduce auto-fill-from-title. The slug regex (`createCourseSchema`) requires at least one real alphanumeric segment, not just hyphens; keep it that way.
 

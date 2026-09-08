@@ -106,5 +106,7 @@ export async function cleanupUser(userId: string) {
   });
   await db.certificate.deleteMany({ where: { userId } });
   await db.review.deleteMany({ where: { userId } });
+  await db.lessonAnswer.deleteMany({ where: { userId } });
+  await db.lessonQuestion.deleteMany({ where: { userId } });
   await db.user.delete({ where: { id: userId } }).catch(() => {});
 }

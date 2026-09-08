@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
 import { ArrowRight, FileText, HelpCircle } from "lucide-react";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getLessonQA } from "@/lib/lesson-qa";
+import { LessonQA } from "@/components/course/LessonQA";
 import { EditLessonForm } from "@/components/admin/EditLessonForm";
 import { AddResourceForm } from "@/components/admin/AddResourceForm";
 import { DeleteResourceButton } from "@/components/admin/DeleteResourceButton";
@@ -30,6 +34,11 @@ export default async function EditLessonPage({
     },
   });
   if (!lesson) notFound();
+
+  const [session, qaThreads] = await Promise.all([
+    getServerSession(authOptions),
+    getLessonQA(lessonId),
+  ]);
 
   return (
     <div className="p-6 md:p-8">
@@ -128,6 +137,15 @@ export default async function EditLessonPage({
           </>
         )}
       </div>
+
+      {session?.user?.id && (
+        <LessonQA
+          lessonId={lesson.id}
+          currentUserId={session.user.id}
+          isAdmin
+          threads={qaThreads}
+        />
+      )}
     </div>
   );
 }

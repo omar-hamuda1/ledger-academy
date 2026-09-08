@@ -6,6 +6,8 @@ import { VideoPlayer } from "@/components/course/VideoPlayer";
 import { LessonSidebar, MobileLessonNav } from "@/components/course/LessonSidebar";
 import { LessonWorkspacePanel } from "@/components/course/LessonWorkspacePanel";
 import { MarkCompleteButton } from "@/components/course/MarkCompleteButton";
+import { LessonQA } from "@/components/course/LessonQA";
+import { getLessonQA } from "@/lib/lesson-qa";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +56,10 @@ export default async function LessonPage({
   });
   const completedLessonIds = new Set(progressRecords.map((p) => p.lessonId));
 
-  const settings = await getSiteSettings();
+  const [settings, qaThreads] = await Promise.all([
+    getSiteSettings(),
+    getLessonQA(lesson.id),
+  ]);
 
   return (
     <div dir="rtl" lang="ar" className="flex flex-1 bg-navy-950 text-slate-100">
@@ -78,6 +83,13 @@ export default async function LessonPage({
           lessonId={lesson.id}
           initialCompleted={completedLessonIds.has(lesson.id)}
           nextLessonHref={nextLessonHref}
+        />
+
+        <LessonQA
+          lessonId={lesson.id}
+          currentUserId={userId}
+          isAdmin={session?.user?.role === "ADMIN"}
+          threads={qaThreads}
         />
       </div>
 
