@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "admin:recover": "tsx scripts/admin-recovery.ts",
+    "admin:super": "tsx scripts/set-super-admin.ts",
     "shots": "node scripts/shots.mjs",
     "postinstall": "prisma skills sync || exit 0",
     "a11y": "node scripts/a11y.mjs"

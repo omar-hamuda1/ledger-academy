@@ -36,14 +36,18 @@ export default async function AdminUsersPage({
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
 
-  const [users, totalCount] = await Promise.all([
+  const [users, totalCount, viewer] = await Promise.all([
     db.user.findMany({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
     db.user.count(),
+    currentUserId
+      ? db.user.findUnique({ where: { id: currentUserId }, select: { superAdmin: true } })
+      : null,
   ]);
+  const viewerIsSuperAdmin = viewer?.superAdmin ?? false;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
@@ -86,6 +90,11 @@ export default async function AdminUsersPage({
                         <span className="flex items-center gap-2">
                           {user.name}
                           {isSelf && <span className="text-[11px] text-slate-400">(أنت)</span>}
+                          {user.superAdmin && (
+                            <span className="rounded-full bg-gold-400/15 px-2 py-0.5 text-[10px] font-bold text-gold-300">
+                              مسؤول رئيسي
+                            </span>
+                          )}
                           {user.disabledAt && (
                             <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-400">
                               معطّل
@@ -106,6 +115,10 @@ export default async function AdminUsersPage({
                     <td className="px-4 py-3">
                       {isSelf ? (
                         <span className="block text-left text-[11px] text-slate-400">—</span>
+                      ) : user.superAdmin && !viewerIsSuperAdmin ? (
+                        <span className="block text-left text-[11px] text-slate-400">
+                          حساب محمي — لا يمكن تعديله
+                        </span>
                       ) : (
                         <UserRowActions
                           userId={user.id}

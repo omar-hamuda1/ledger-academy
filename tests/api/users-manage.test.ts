@@ -110,4 +110,44 @@ describe("PATCH /api/users/[id]", () => {
     const res = await call(admin.id, { action: "setDisabled", disabled: true });
     expect(res.status).toBe(403);
   });
+
+  // A `superAdmin` account is protected: a regular admin can't touch it here,
+  // and there's no action that flips the flag itself (that's `npm run admin:super`).
+  describe("super-admin protection", () => {
+    it("a regular admin can't demote / disable / reset-password a super-admin (403)", async () => {
+      const sa = await createUser("ADMIN", { superAdmin: true });
+      for (const body of [
+        { action: "setRole", role: "STUDENT" },
+        { action: "setDisabled", disabled: true },
+        { action: "setPassword" },
+      ] as const) {
+        const res = await call(sa.id, body);
+        expect(res.status).toBe(403);
+      }
+      const after = (await db.user.findUnique({ where: { id: sa.id } }))!;
+      expect(after.role).toBe("ADMIN");
+      expect(after.disabledAt).toBeNull();
+      await cleanupUser(sa.id);
+    });
+
+    it("another super-admin can manage a super-admin", async () => {
+      const actorSA = await createUser("ADMIN", { superAdmin: true });
+      const targetSA = await createUser("ADMIN", { superAdmin: true });
+      vi.mocked(getServerSession).mockResolvedValue({
+        user: { id: actorSA.id, role: "ADMIN" },
+      } as never);
+      const res = await call(targetSA.id, { action: "setPassword", password: "sa-chosen-123" });
+      expect(res.status).toBe(200);
+      expect((await res.json()).password).toBe("sa-chosen-123");
+      await cleanupUser(actorSA.id);
+      await cleanupUser(targetSA.id);
+    });
+
+    it("no action changes the superAdmin flag", async () => {
+      const up = await call(other.id, { action: "setRole", role: "ADMIN" });
+      expect(up.status).toBe(200);
+      expect((await db.user.findUnique({ where: { id: other.id } }))!.superAdmin).toBe(false);
+      await call(other.id, { action: "setRole", role: "STUDENT" });
+    });
+  });
 });

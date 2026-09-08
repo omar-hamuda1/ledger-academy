@@ -9,8 +9,9 @@ import { logAudit } from "@/lib/audit";
 // Admin manages another account: promote/demote between ADMIN and STUDENT,
 // disable/enable it (a disabled account can't log in — see src/lib/auth.ts),
 // or reset its password (email-based reset isn't live yet). Guards: an admin
-// can't act on their own row here, and the platform must always keep at least
-// one active ADMIN.
+// can't act on their own row here, the platform must always keep at least one
+// active ADMIN, and a `superAdmin` account can only be touched by another
+// super-admin.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
@@ -31,6 +32,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const target = await db.user.findUnique({ where: { id } });
   if (!target) {
     return NextResponse.json({ error: "المستخدم غير موجود." }, { status: 404 });
+  }
+
+  // A super-admin account is protected: only another super-admin can change its
+  // role, disable it, or reset its password. There is no API/UI path to grant
+  // or revoke `superAdmin` itself — that's `npm run admin:super` (direct DB)
+  // only — so a regular admin can never touch a protected account from here.
+  if (target.superAdmin) {
+    const actor = await db.user.findUnique({
+      where: { id: admin.id },
+      select: { superAdmin: true },
+    });
+    if (!actor?.superAdmin) {
+      return NextResponse.json(
+        { error: "لا يمكن تعديل حساب مسؤول رئيسي." },
+        { status: 403 },
+      );
+    }
   }
 
   // Defense-in-depth "keep >=1 active ADMIN" check. Largely belt-and-suspenders

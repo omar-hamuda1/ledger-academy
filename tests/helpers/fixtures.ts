@@ -2,13 +2,17 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { generateCode } from "@/lib/prepaid-codes";
 
-export async function createUser(role: "ADMIN" | "STUDENT" = "STUDENT") {
+export async function createUser(
+  role: "ADMIN" | "STUDENT" = "STUDENT",
+  opts: { superAdmin?: boolean } = {},
+) {
   return db.user.create({
     data: {
       name: "Test User",
       email: `test-${randomUUID()}@example.com`,
       passwordHash: "x",
       role,
+      superAdmin: opts.superAdmin ?? false,
     },
   });
 }

@@ -14,15 +14,21 @@ import bcrypt from "bcryptjs";
  * control via `prisma studio` or a raw SQL client anyway.
  *
  * Usage:
- *   npm run admin:recover -- --email you@example.com --password "NewPass123" [--name "اسمك"]
+ *   npm run admin:recover -- --email you@example.com --password "NewPass123" [--name "اسمك"] [--super]
+ *
+ * Pass --super to also make the account a protected super-admin (see
+ * scripts/set-super-admin.ts). Recovery never removes an existing super-admin
+ * flag.
  */
 
-function parseArgs(): { email?: string; password?: string; name?: string } {
+function parseArgs(): { email?: string; password?: string; name?: string; super: boolean } {
   const args = process.argv.slice(2);
-  const out: Record<string, string> = {};
+  const out: { email?: string; password?: string; name?: string; super: boolean } = { super: false };
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith("--")) {
-      out[args[i].slice(2)] = args[i + 1];
+    if (args[i] === "--super") {
+      out.super = true;
+    } else if (args[i].startsWith("--")) {
+      out[args[i].slice(2) as "email" | "password" | "name"] = args[i + 1];
       i++;
     }
   }
@@ -30,7 +36,7 @@ function parseArgs(): { email?: string; password?: string; name?: string } {
 }
 
 async function main() {
-  const { email, password, name } = parseArgs();
+  const { email, password, name, super: makeSuper } = parseArgs();
 
   if (!email || !password) {
     console.error(
@@ -49,11 +55,19 @@ async function main() {
 
   const user = await db.user.upsert({
     where: { email },
-    update: { passwordHash, role: Role.ADMIN },
-    create: { email, name: name ?? "Admin", passwordHash, role: Role.ADMIN },
+    update: { passwordHash, role: Role.ADMIN, ...(makeSuper ? { superAdmin: true } : {}) },
+    create: {
+      email,
+      name: name ?? "Admin",
+      passwordHash,
+      role: Role.ADMIN,
+      superAdmin: makeSuper,
+    },
   });
 
-  console.log(`✓ ${user.email} now has the given password and ADMIN role.`);
+  console.log(
+    `✓ ${user.email} now has the given password and ADMIN role${user.superAdmin ? " (super-admin)" : ""}.`,
+  );
   await db.$disconnect();
 }
 
