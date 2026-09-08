@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["fra1"],
-  "buildCommand": "prisma migrate deploy && prisma generate && next build"
+  "buildCommand": "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 prisma migrate deploy && prisma generate && next build"
 }
