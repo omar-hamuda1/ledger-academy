@@ -36,12 +36,6 @@ export function QuizTakerForm({
     results: QuestionResult[];
   } | null>(null);
 
-  const deadlineRef = useRef<number | null>(
-    timeLimitSec ? Date.now() + timeLimitSec * 1000 : null,
-  );
-  // Kept fresh each render so the interval always calls the latest closure.
-  const autoSubmitRef = useRef<() => void>(() => {});
-
   function selectAnswer(questionId: string, optionId: string) {
     if (result) return;
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
@@ -93,30 +87,31 @@ export function QuizTakerForm({
     setAnswers({});
     setError(null);
     setTimedOut(false);
-    if (timeLimitSec) {
-      deadlineRef.current = Date.now() + timeLimitSec * 1000;
-      setRemaining(timeLimitSec);
-    }
+    setRemaining(timeLimitSec ?? null);
   }
 
-  autoSubmitRef.current = () => {
-    void submitAnswers(true);
-  };
+  // Latest submit fn for the interval callback (updated in an effect, not
+  // during render).
+  const submitRef = useRef(submitAnswers);
+  useEffect(() => {
+    submitRef.current = submitAnswers;
+  });
 
   // Countdown for a timed quiz: tick every second, auto-submit at zero.
+  // Re-arms on retry (result -> null) with a fresh deadline.
   useEffect(() => {
-    if (deadlineRef.current == null || result) return;
+    if (!timeLimitSec || result) return;
+    const deadline = Date.now() + timeLimitSec * 1000;
     const id = setInterval(() => {
-      const left = Math.max(0, Math.round((deadlineRef.current! - Date.now()) / 1000));
+      const left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
       setRemaining(left);
       if (left <= 0) {
         clearInterval(id);
-        autoSubmitRef.current();
+        void submitRef.current(true);
       }
     }, 1000);
     return () => clearInterval(id);
-    // re-arm after a retry (new deadline) — result flips to null then
-  }, [result]);
+  }, [timeLimitSec, result]);
 
   const resultByQuestion = new Map(result?.results.map((r) => [r.questionId, r]));
   const showTimer = remaining != null && !result;
