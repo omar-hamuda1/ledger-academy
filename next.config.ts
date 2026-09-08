@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 // Enforcing as of 2026-09-08 — verified clean on the live site in Report-Only
 // mode first (no violations across home / course / lesson-with-video /
@@ -14,7 +15,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:", // course thumbnails are arbitrary admin HTTPS URLs
   "font-src 'self'", // next/font self-hosts Cairo
-  "connect-src 'self'",
+  "connect-src 'self' https://*.sentry.io", // Sentry error/trace ingest (inert until NEXT_PUBLIC_SENTRY_DSN is set)
   "frame-src https:", // admin-supplied lesson video embeds (YouTube/Vimeo/…)
   "media-src 'self' blob: https:", // direct-file .mp4 lessons
   "object-src 'none'",
@@ -53,4 +54,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrapping is harmless without a DSN — the runtime SDK stays inert (see the
+// sentry.*.config.ts guards). Source-map upload only runs when SENTRY_AUTH_TOKEN
+// (+ SENTRY_ORG / SENTRY_PROJECT) are set; otherwise it's skipped, not fatal.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+});

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { RefreshCw, Home } from "lucide-react";
+import * as Sentry from "@sentry/nextjs";
 
 export default function MarketingError({
   error,
@@ -13,6 +14,7 @@ export default function MarketingError({
 }) {
   useEffect(() => {
     console.error(error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (
