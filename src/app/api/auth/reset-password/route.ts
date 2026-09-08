@@ -41,6 +41,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "لا يوجد حساب مسجل بهذا البريد الإلكتروني." }, { status: 404 });
   }
 
+  // Don't let a "reset" just re-set the same password.
+  if (user.passwordHash && (await bcrypt.compare(parsed.data.password, user.passwordHash))) {
+    return NextResponse.json(
+      { error: "كلمة المرور الجديدة يجب أن تختلف عن كلمة المرور الحالية." },
+      { status: 400 },
+    );
+  }
+
   const passwordHash = await bcrypt.hash(parsed.data.password, 12);
 
   await db.user.update({ where: { id: user.id }, data: { passwordHash } });

@@ -23,7 +23,9 @@ export const authOptions: NextAuthOptions = {
 
         const rateLimitKey = `login:${credentials.email.toLowerCase()}`;
         if (!(await checkRateLimit(rateLimitKey, 5, 5 * 60 * 1000))) {
-          throw new Error("محاولات تسجيل دخول كثيرة جدًا، حاول لاحقًا.");
+          throw new Error(
+            "لقد تجاوزت الحد المسموح لمحاولات تسجيل الدخول (5 محاولات). انتظر 5 دقائق ثم حاول مرة أخرى، أو استخدم « نسيت كلمة المرور؟ » لإعادة التعيين.",
+          );
         }
 
         const user = await db.user.findUnique({
