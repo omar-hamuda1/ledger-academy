@@ -11,6 +11,10 @@ jobs:
   # before they auto-deploy. Runs on every push/PR.
   static:
     runs-on: ubuntu-latest
+    # Dummy URL so `prisma validate`/`generate` can resolve env("DATABASE_URL").
+    # Neither connects — this job never touches a real database.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
