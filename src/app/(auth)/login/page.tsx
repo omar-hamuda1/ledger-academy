@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { AuthLayout, AuthFormCard, AuthError } from "@/components/auth/AuthLayout";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,12 +66,11 @@ export default function LoginPage() {
               نسيت كلمة المرور؟
             </Link>
           </div>
-          <input
-            type="password"
+          <PasswordInput
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-gold-400 focus:outline-none"
+            onChange={setPassword}
+            autoComplete="current-password"
+            ariaLabel="كلمة المرور"
             placeholder="••••••••"
           />
         </div>

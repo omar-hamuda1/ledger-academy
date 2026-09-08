@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserPlus, ShieldCheck } from "lucide-react";
 import { AuthLayout, AuthFormCard, AuthError, OtpCodeField } from "@/components/auth/AuthLayout";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -113,13 +114,12 @@ export default function RegisterPage() {
 
           <div>
             <label className="mb-1.5 block text-sm text-slate-300">كلمة المرور</label>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              onChange={setPassword}
               minLength={8}
-              className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-gold-400 focus:outline-none"
+              autoComplete="new-password"
+              ariaLabel="كلمة المرور"
               placeholder="8 أحرف على الأقل"
             />
           </div>
