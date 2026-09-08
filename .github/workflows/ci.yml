@@ -23,6 +23,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
+      # Regenerates next-env.d.ts + .next/types/** (route/layout/page types).
+      # Present locally after `next dev`; a fresh CI checkout has neither, so
+      # tsc would trip on Next's generated globals (LayoutProps, PageProps).
+      - name: Generate Next types
+        run: npx next typegen
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Lint
