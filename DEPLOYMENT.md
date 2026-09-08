@@ -82,8 +82,10 @@ push redeploys; a failed build leaves the previous deployment live.
 ## After the first deploy — smoke test on the live URL
 
 - Home / `/courses` / `/pricing` render (ISR pages hit the DB at build).
-- Register a throwaway account. **OTP email won't arrive** until SendGrid is
-  set — use `npm run admin:recover` against prod, or the OTP dev-log, to get in.
+- Register a throwaway account. The OTP email is sent via Brevo (transactional
+  sending confirmed live 2026-09-08); check spam, since the sender is still a
+  freemail `@gmail.com` address. If `BREVO_API_KEY` isn't set, use
+  `npm run admin:recover` against prod, or the OTP dev-log, to get in.
 - Log in → `/dashboard/student` and `/dashboard/admin` load, the notification
   bell polls without errors.
 - Admin: create a course, generate prepaid codes, send a broadcast notification.
