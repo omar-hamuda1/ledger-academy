@@ -4,17 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { GraduationCap, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { useT } from "@/i18n/LocaleProvider";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import type { MessageKey } from "@/i18n/translate";
 
-const navLinks = [
-  { href: "/#home", label: "الرئيسية" },
-  { href: "/#courses", label: "الكورسات" },
-  { href: "/#about", label: "عن المحاضر" },
-  { href: "/#contact", label: "تواصل معنا" },
+const navLinks: { href: string; key: MessageKey }[] = [
+  { href: "/#home", key: "nav.home" },
+  { href: "/#courses", key: "nav.courses" },
+  { href: "/#about", key: "nav.about" },
+  { href: "/#contact", key: "nav.contact" },
 ];
 
 export function LedgerHeader() {
   const [open, setOpen] = useState(false);
   const { data: session, status } = useSession();
+  const t = useT();
   const dashboardHref = session?.user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/student";
 
   return (
@@ -32,12 +36,13 @@ export function LedgerHeader() {
         <nav className="hidden items-center gap-8 text-sm font-medium text-slate-300 md:flex">
           {navLinks.map((link) => (
             <a key={link.href} href={link.href} className="transition hover:text-gold-400">
-              {link.label}
+              {t(link.key)}
             </a>
           ))}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <LanguageSwitcher />
           {status === "authenticated" ? (
             <>
               <Link
@@ -45,12 +50,12 @@ export function LedgerHeader() {
                 className="flex items-center gap-2 rounded-lg border border-gold-400/40 px-4 py-2.5 text-sm font-bold text-gold-300 transition hover:bg-gold-400/10"
               >
                 <LayoutDashboard size={16} />
-                مرحبًا، {session.user.name?.split(" ")[0]}
+                {t("header.greeting", { name: session.user.name?.split(" ")[0] ?? "" })}
               </Link>
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/" })}
-                aria-label="تسجيل الخروج"
+                aria-label={t("common.logout")}
                 className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-slate-300 transition hover:border-red-400/40 hover:text-red-400"
               >
                 <LogOut size={16} />
@@ -63,14 +68,14 @@ export function LedgerHeader() {
               href="/login"
               className="rounded-lg bg-gold-400 px-5 py-2.5 text-sm font-bold text-navy-950 transition hover:bg-gold-300"
             >
-              تسجيل الدخول
+              {t("common.login")}
             </Link>
           )}
         </div>
 
         <button
           type="button"
-          aria-label="فتح القائمة"
+          aria-label={t("header.openMenu")}
           onClick={() => setOpen((v) => !v)}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white md:hidden"
         >
@@ -87,9 +92,12 @@ export function LedgerHeader() {
               onClick={() => setOpen(false)}
               className="rounded-lg px-2 py-3 transition hover:bg-white/5 hover:text-gold-400"
             >
-              {link.label}
+              {t(link.key)}
             </a>
           ))}
+          <div className="px-2 py-3">
+            <LanguageSwitcher />
+          </div>
           {status === "authenticated" ? (
             <>
               <Link
@@ -98,7 +106,7 @@ export function LedgerHeader() {
                 className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-gold-400/40 px-5 py-3 text-center font-bold text-gold-300"
               >
                 <LayoutDashboard size={16} />
-                مرحبًا، {session.user.name?.split(" ")[0]}
+                {t("header.greeting", { name: session.user.name?.split(" ")[0] ?? "" })}
               </Link>
               <button
                 type="button"
@@ -109,7 +117,7 @@ export function LedgerHeader() {
                 className="flex items-center justify-center gap-2 rounded-lg border border-white/15 px-5 py-3 text-center font-bold text-slate-300"
               >
                 <LogOut size={16} />
-                تسجيل الخروج
+                {t("common.logout")}
               </button>
             </>
           ) : (
@@ -118,7 +126,7 @@ export function LedgerHeader() {
               onClick={() => setOpen(false)}
               className="mt-2 rounded-lg bg-gold-400 px-5 py-3 text-center font-bold text-navy-950"
             >
-              تسجيل الدخول
+              {t("common.login")}
             </Link>
           )}
         </nav>

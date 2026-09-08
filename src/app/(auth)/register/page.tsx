@@ -7,9 +7,11 @@ import Link from "next/link";
 import { UserPlus, ShieldCheck } from "lucide-react";
 import { AuthLayout, AuthFormCard, AuthError, OtpCodeField } from "@/components/auth/AuthLayout";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { useT } from "@/i18n/LocaleProvider";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useT();
   const [step, setStep] = useState<"info" | "verify">("info");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,7 +35,7 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "تعذّر إرسال رمز التحقق.");
+      setError(data.error ?? t("auth.register.sendCodeError"));
       return;
     }
 
@@ -54,7 +56,7 @@ export default function RegisterPage() {
 
     if (!verifyRes.ok) {
       setLoading(false);
-      setError(verifyData.error ?? "رمز التحقق غير صحيح.");
+      setError(verifyData.error ?? t("auth.register.otpError"));
       return;
     }
 
@@ -67,7 +69,7 @@ export default function RegisterPage() {
 
     if (!res.ok) {
       setLoading(false);
-      setError(data.error ?? "حدث خطأ ما، حاول مرة أخرى.");
+      setError(data.error ?? t("auth.genericError"));
       return;
     }
 
@@ -93,11 +95,11 @@ export default function RegisterPage() {
   return (
     <AuthLayout
       icon={step === "info" ? <UserPlus size={22} /> : <ShieldCheck size={22} />}
-      title={step === "info" ? "إنشاء حساب جديد" : "تأكيد البريد الإلكتروني"}
+      title={step === "info" ? t("auth.register.infoTitle") : t("auth.register.verifyTitle")}
       subtitle={
         step === "info"
-          ? "انضم إلى Ledger Academy وابدأ رحلتك في إدارة الأعمال."
-          : `أدخل الرمز المرسل إلى ${email}`
+          ? t("auth.register.infoSubtitle")
+          : t("auth.register.verifySubtitle", { email })
       }
     >
       {step === "info" ? (
@@ -105,19 +107,19 @@ export default function RegisterPage() {
           <AuthError message={error} />
 
           <div>
-            <label className="mb-1.5 block text-sm text-slate-300">الاسم</label>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("auth.register.name")}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-gold-400 focus:outline-none"
-              placeholder="اسمك الكامل"
+              placeholder={t("auth.register.namePlaceholder")}
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm text-slate-300">البريد الإلكتروني</label>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("common.email")}</label>
             <input
               type="email"
               value={email}
@@ -129,14 +131,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm text-slate-300">كلمة المرور</label>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("common.password")}</label>
             <PasswordInput
               value={password}
               onChange={setPassword}
               minLength={8}
               autoComplete="new-password"
-              ariaLabel="كلمة المرور"
-              placeholder="8 أحرف على الأقل"
+              ariaLabel={t("common.password")}
+              placeholder={t("auth.register.passwordPlaceholder")}
             />
           </div>
 
@@ -145,25 +147,25 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full rounded-lg bg-gold-400 py-2.5 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
           >
-            {loading ? "جارٍ الإرسال..." : "إرسال رمز التحقق"}
+            {loading ? t("auth.register.sending") : t("auth.register.sendCode")}
           </button>
 
           <p className="text-center text-xs text-slate-400">
-            بإنشاء حساب، أنت توافق على{" "}
+            {t("auth.register.consentPrefix")}{" "}
             <Link href="/terms" className="text-gold-400 underline">
-              شروط الاستخدام
+              {t("auth.register.terms")}
             </Link>{" "}
-            و
+            {t("auth.register.and")}{" "}
             <Link href="/privacy" className="text-gold-400 underline">
-              سياسة الخصوصية
+              {t("auth.register.privacy")}
             </Link>
             .
           </p>
 
           <p className="text-center text-sm text-slate-400">
-            لديك حساب بالفعل؟{" "}
+            {t("auth.register.haveAccount")}{" "}
             <Link href="/login" className="font-semibold text-gold-400 underline">
-              تسجيل الدخول
+              {t("common.login")}
             </Link>
           </p>
         </AuthFormCard>
@@ -178,7 +180,7 @@ export default function RegisterPage() {
             disabled={loading || code.length !== 6}
             className="w-full rounded-lg bg-gold-400 py-2.5 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
           >
-            {loading ? "جارٍ التأكيد..." : "تأكيد وإنشاء الحساب"}
+            {loading ? t("auth.register.confirming") : t("auth.register.confirmCreate")}
           </button>
 
           <button
@@ -186,7 +188,7 @@ export default function RegisterPage() {
             onClick={() => setStep("info")}
             className="w-full text-center text-sm text-slate-400 hover:text-gold-400"
           >
-            تعديل البيانات
+            {t("auth.register.editInfo")}
           </button>
         </AuthFormCard>
       )}

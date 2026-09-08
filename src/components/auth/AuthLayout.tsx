@@ -1,6 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { Cairo } from "next/font/google";
 import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
+import { useT } from "@/i18n/LocaleProvider";
 
 const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
@@ -16,7 +19,7 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <div dir="rtl" lang="ar" className={`${cairo.className} flex min-h-screen flex-col bg-navy-950 text-slate-100`}>
+    <div className={`${cairo.className} flex min-h-screen flex-col bg-navy-950 text-slate-100`}>
       <LedgerHeader />
 
       <main className="flex flex-1 items-center justify-center px-6 py-16">
@@ -56,9 +59,10 @@ export function AuthError({ message }: { message: string | null }) {
 }
 
 export function OtpCodeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const t = useT();
   return (
     <div>
-      <label className="mb-1.5 block text-sm text-slate-300">رمز التحقق (6 أرقام)</label>
+      <label className="mb-1.5 block text-sm text-slate-300">{t("auth.otpLabel")}</label>
       <input
         type="text"
         inputMode="numeric"

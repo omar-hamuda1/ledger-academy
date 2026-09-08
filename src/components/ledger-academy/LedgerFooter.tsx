@@ -1,14 +1,19 @@
+"use client";
+
 import { GraduationCap } from "lucide-react";
 import { FacebookIcon, InstagramIcon, YoutubeIcon } from "./SocialIcons";
+import { useT } from "@/i18n/LocaleProvider";
+import type { MessageKey } from "@/i18n/translate";
 
-const navLinks = [
-  { href: "/#home", label: "الرئيسية" },
-  { href: "/#courses", label: "الكورسات" },
-  { href: "/#about", label: "عن المحاضر" },
-  { href: "/#contact", label: "تواصل معنا" },
+const navLinks: { href: string; key: MessageKey }[] = [
+  { href: "/#home", key: "nav.home" },
+  { href: "/#courses", key: "nav.courses" },
+  { href: "/#about", key: "nav.about" },
+  { href: "/#contact", key: "nav.contact" },
 ];
 
 export function LedgerFooter() {
+  const t = useT();
   return (
     <footer className="border-t border-white/10 bg-navy-950">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-3">
@@ -22,18 +27,17 @@ export function LedgerFooter() {
             </span>
           </div>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
-            منصة تعليمية متخصصة في تدريس إدارة الأعمال لطلاب الثانوية العامة بأسلوب
-            عصري وتفاعلي.
+            {t("footer.tagline")}
           </p>
         </div>
 
         <div>
-          <h3 className="mb-4 font-bold text-white">روابط سريعة</h3>
+          <h3 className="mb-4 font-bold text-white">{t("footer.quickLinks")}</h3>
           <ul className="space-y-2 text-sm text-slate-400">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <a href={link.href} className="transition hover:text-gold-400">
-                  {link.label}
+                  {t(link.key)}
                 </a>
               </li>
             ))}
@@ -41,7 +45,7 @@ export function LedgerFooter() {
         </div>
 
         <div>
-          <h3 className="mb-4 font-bold text-white">تابعنا</h3>
+          <h3 className="mb-4 font-bold text-white">{t("footer.followUs")}</h3>
           <div className="flex items-center gap-3">
             <a
               href="#"
@@ -69,13 +73,13 @@ export function LedgerFooter() {
       </div>
 
       <div className="flex flex-col items-center gap-3 border-t border-white/10 py-6 text-center text-sm text-slate-400 sm:flex-row sm:justify-between sm:px-6">
-        <span>© {new Date().getFullYear()} Ledger Academy. جميع الحقوق محفوظة.</span>
+        <span>{t("footer.rights", { year: new Date().getFullYear() })}</span>
         <div className="flex items-center gap-4">
           <a href="/privacy" className="transition hover:text-gold-400">
-            سياسة الخصوصية
+            {t("footer.privacy")}
           </a>
           <a href="/terms" className="transition hover:text-gold-400">
-            شروط الاستخدام
+            {t("footer.terms")}
           </a>
         </div>
       </div>

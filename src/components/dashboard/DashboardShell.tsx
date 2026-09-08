@@ -23,29 +23,32 @@ import {
 } from "lucide-react";
 import { SignOutButton } from "./SignOutButton";
 import { NotificationBell } from "./NotificationBell";
+import { useT } from "@/i18n/LocaleProvider";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import type { MessageKey } from "@/i18n/translate";
 
 const navConfig = {
   admin: {
-    roleLabel: "لوحة تحكم المحاضر",
+    roleLabelKey: "shell.adminRole" as MessageKey,
     items: [
-      { href: "/dashboard/admin", label: "لوحة التحكم", icon: LayoutDashboard },
-      { href: "/dashboard/admin/courses", label: "إدارة الكورسات والأسعار", icon: Banknote },
-      { href: "/dashboard/admin/lessons", label: "إدارة الدروس", icon: BookOpen },
-      { href: "/dashboard/admin/progress", label: "تقدم الطلاب", icon: TrendingUp },
-      { href: "/dashboard/admin/users", label: "الطلاب والمستخدمون", icon: Users },
-      { href: "/dashboard/admin/prepaid-codes", label: "أكواد الكورسات", icon: Ticket },
-      { href: "/dashboard/admin/code-orders", label: "طلبات الأكواد", icon: Inbox },
-      { href: "/dashboard/admin/notifications", label: "إدارة الإشعارات", icon: BellRing },
-      { href: "/dashboard/admin/settings", label: "الإعدادات العامة", icon: Settings },
-      { href: "/dashboard/admin/audit", label: "سجل النشاط", icon: History },
+      { href: "/dashboard/admin", key: "shell.nav.adminHome" as MessageKey, icon: LayoutDashboard },
+      { href: "/dashboard/admin/courses", key: "shell.nav.courses" as MessageKey, icon: Banknote },
+      { href: "/dashboard/admin/lessons", key: "shell.nav.lessons" as MessageKey, icon: BookOpen },
+      { href: "/dashboard/admin/progress", key: "shell.nav.progress" as MessageKey, icon: TrendingUp },
+      { href: "/dashboard/admin/users", key: "shell.nav.users" as MessageKey, icon: Users },
+      { href: "/dashboard/admin/prepaid-codes", key: "shell.nav.prepaidCodes" as MessageKey, icon: Ticket },
+      { href: "/dashboard/admin/code-orders", key: "shell.nav.codeOrders" as MessageKey, icon: Inbox },
+      { href: "/dashboard/admin/notifications", key: "shell.nav.notifications" as MessageKey, icon: BellRing },
+      { href: "/dashboard/admin/settings", key: "shell.nav.settings" as MessageKey, icon: Settings },
+      { href: "/dashboard/admin/audit", key: "shell.nav.audit" as MessageKey, icon: History },
     ],
   },
   student: {
-    roleLabel: "لوحة تحكم الطالب",
+    roleLabelKey: "shell.studentRole" as MessageKey,
     items: [
-      { href: "/dashboard/student", label: "الرئيسية وكورساتي", icon: Home },
-      { href: "/dashboard/student/quizzes", label: "اختباراتي", icon: ClipboardList },
-      { href: "/dashboard/student/tools", label: "الأدوات التفاعلية", icon: Calculator },
+      { href: "/dashboard/student", key: "shell.nav.studentHome" as MessageKey, icon: Home },
+      { href: "/dashboard/student/quizzes", key: "shell.nav.quizzes" as MessageKey, icon: ClipboardList },
+      { href: "/dashboard/student/tools", key: "shell.nav.tools" as MessageKey, icon: Calculator },
     ],
   },
 } as const;
@@ -61,7 +64,8 @@ export function DashboardShell({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { roleLabel, items: navItems } = navConfig[role];
+  const t = useT();
+  const { roleLabelKey, items: navItems } = navConfig[role];
 
   const sidebarContent = (
     <>
@@ -75,7 +79,7 @@ export function DashboardShell({
       </Link>
 
       <p className="px-6 pb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-        {roleLabel}
+        {t(roleLabelKey)}
       </p>
 
       <nav className="flex flex-1 flex-col gap-1 px-3">
@@ -93,7 +97,7 @@ export function DashboardShell({
               }`}
             >
               <item.icon size={18} />
-              {item.label}
+              {t(item.key)}
             </Link>
           );
         })}
@@ -102,7 +106,7 @@ export function DashboardShell({
   );
 
   return (
-    <div dir="rtl" lang="ar" className="flex min-h-screen bg-navy-950 text-slate-100">
+    <div className="flex min-h-screen bg-navy-950 text-slate-100">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-l border-white/10 bg-navy-900/60 md:flex">
         {sidebarContent}
@@ -115,7 +119,7 @@ export function DashboardShell({
             {sidebarContent}
           </div>
           <button
-            aria-label="إغلاق القائمة"
+            aria-label={t("header.closeMenu")}
             onClick={() => setOpen(false)}
             className="flex-1 bg-black/60"
           />
@@ -128,7 +132,7 @@ export function DashboardShell({
         <header className="flex items-center justify-between border-b border-white/10 bg-navy-950/80 px-4 py-3 backdrop-blur md:px-8">
           <button
             type="button"
-            aria-label="فتح القائمة"
+            aria-label={t("header.openMenu")}
             onClick={() => setOpen((v) => !v)}
             className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white md:hidden"
           >
@@ -139,6 +143,7 @@ export function DashboardShell({
 
           <div className="flex items-center gap-3">
             {userName && <span className="hidden text-sm text-slate-300 sm:inline">{userName}</span>}
+            <LanguageSwitcher />
             <NotificationBell />
             <SignOutButton />
           </div>

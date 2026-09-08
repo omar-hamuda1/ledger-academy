@@ -6,9 +6,11 @@ import Link from "next/link";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { AuthLayout, AuthFormCard, AuthError, OtpCodeField } from "@/components/auth/AuthLayout";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { useT } from "@/i18n/LocaleProvider";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const t = useT();
   const [step, setStep] = useState<"email" | "reset">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -32,7 +34,7 @@ export default function ForgotPasswordPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "تعذّر إرسال رمز التحقق.");
+      setError(data.error ?? t("auth.forgot.sendCodeError"));
       return;
     }
 
@@ -44,7 +46,7 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError("كلمتا المرور غير متطابقتين.");
+      setError(t("auth.forgot.mismatch"));
       return;
     }
 
@@ -59,7 +61,7 @@ export default function ForgotPasswordPage() {
 
     if (!verifyRes.ok) {
       setLoading(false);
-      setError(verifyData.error ?? "رمز التحقق غير صحيح.");
+      setError(verifyData.error ?? t("auth.forgot.otpError"));
       return;
     }
 
@@ -73,7 +75,7 @@ export default function ForgotPasswordPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? "تعذّر إعادة تعيين كلمة المرور.");
+      setError(data.error ?? t("auth.forgot.resetError"));
       return;
     }
 
@@ -83,11 +85,11 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout
       icon={step === "email" ? <KeyRound size={22} /> : <ShieldCheck size={22} />}
-      title={step === "email" ? "نسيت كلمة المرور؟" : "تأكيد وإعادة تعيين"}
+      title={step === "email" ? t("auth.forgot.emailTitle") : t("auth.forgot.resetTitle")}
       subtitle={
         step === "email"
-          ? "أدخل البريد الإلكتروني المسجّل على حسابك، وسنرسل لك رمز تحقق."
-          : `أدخل الرمز المرسل إلى ${email} وكلمة المرور الجديدة.`
+          ? t("auth.forgot.emailSubtitle")
+          : t("auth.forgot.resetSubtitle", { email })
       }
     >
       {step === "email" ? (
@@ -95,7 +97,7 @@ export default function ForgotPasswordPage() {
           <AuthError message={error} />
 
           <div>
-            <label className="mb-1.5 block text-sm text-slate-300">البريد الإلكتروني</label>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("common.email")}</label>
             <input
               type="email"
               value={email}
@@ -111,13 +113,13 @@ export default function ForgotPasswordPage() {
             disabled={loading}
             className="w-full rounded-lg bg-gold-400 py-2.5 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
           >
-            {loading ? "جارٍ الإرسال..." : "إرسال رمز التحقق"}
+            {loading ? t("auth.forgot.sending") : t("auth.forgot.sendCode")}
           </button>
 
           <p className="text-center text-sm text-slate-400">
-            تذكّرت كلمة المرور؟{" "}
+            {t("auth.forgot.remembered")}{" "}
             <Link href="/login" className="font-semibold text-gold-400 hover:underline">
-              تسجيل الدخول
+              {t("common.login")}
             </Link>
           </p>
         </AuthFormCard>
@@ -128,26 +130,26 @@ export default function ForgotPasswordPage() {
           <OtpCodeField value={code} onChange={setCode} />
 
           <div>
-            <label className="mb-1.5 block text-sm text-slate-300">كلمة المرور الجديدة</label>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("auth.forgot.newPassword")}</label>
             <PasswordInput
               value={password}
               onChange={setPassword}
               minLength={8}
               autoComplete="new-password"
-              ariaLabel="كلمة المرور الجديدة"
-              placeholder="8 أحرف على الأقل"
+              ariaLabel={t("auth.forgot.newPassword")}
+              placeholder={t("auth.forgot.newPasswordPlaceholder")}
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm text-slate-300">تأكيد كلمة المرور</label>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("auth.forgot.confirmPassword")}</label>
             <PasswordInput
               value={confirmPassword}
               onChange={setConfirmPassword}
               minLength={8}
               autoComplete="new-password"
-              ariaLabel="تأكيد كلمة المرور"
-              placeholder="أعد كتابة كلمة المرور"
+              ariaLabel={t("auth.forgot.confirmPassword")}
+              placeholder={t("auth.forgot.confirmPasswordPlaceholder")}
             />
           </div>
 
@@ -156,7 +158,7 @@ export default function ForgotPasswordPage() {
             disabled={loading || code.length !== 6}
             className="w-full rounded-lg bg-gold-400 py-2.5 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
           >
-            {loading ? "جارٍ التأكيد..." : "تأكيد كلمة المرور الجديدة"}
+            {loading ? t("auth.forgot.submitting") : t("auth.forgot.submit")}
           </button>
 
           <button
@@ -164,7 +166,7 @@ export default function ForgotPasswordPage() {
             onClick={() => setStep("email")}
             className="w-full text-center text-sm text-slate-400 hover:text-gold-400"
           >
-            تغيير البريد الإلكتروني
+            {t("auth.forgot.changeEmail")}
           </button>
         </AuthFormCard>
       )}
