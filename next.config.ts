@@ -9,7 +9,7 @@ import type { NextConfig } from "next";
 // external-script lockdown.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://www.youtube.com", // YouTube IFrame API (lesson video progress)
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:", // course thumbnails are arbitrary admin HTTPS URLs
   "font-src 'self'", // next/font self-hosts Cairo

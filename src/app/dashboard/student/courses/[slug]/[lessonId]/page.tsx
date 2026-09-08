@@ -56,9 +56,13 @@ export default async function LessonPage({
   });
   const completedLessonIds = new Set(progressRecords.map((p) => p.lessonId));
 
-  const [settings, qaThreads] = await Promise.all([
+  const [settings, qaThreads, thisProgress] = await Promise.all([
     getSiteSettings(),
     getLessonQA(lesson.id),
+    db.lessonProgress.findUnique({
+      where: { userId_lessonId: { userId, lessonId: lesson.id } },
+      select: { watchedSec: true, completed: true },
+    }),
   ]);
 
   return (
@@ -71,7 +75,12 @@ export default async function LessonPage({
           completedLessonIds={completedLessonIds}
         />
         <h1 className="text-2xl font-extrabold text-white">{lesson.title}</h1>
-        <VideoPlayer videoUrl={lesson.videoUrl} />
+        <VideoPlayer
+          videoUrl={lesson.videoUrl}
+          lessonId={lesson.id}
+          initialSec={thisProgress?.watchedSec ?? 0}
+          initialCompleted={thisProgress?.completed ?? false}
+        />
         {lesson.contentHtml && (
           <div
             className="prose prose-invert mt-6 max-w-none"

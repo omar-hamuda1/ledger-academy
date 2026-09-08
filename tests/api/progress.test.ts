@@ -76,4 +76,22 @@ describe("POST /api/progress — enrollment IDOR fix", () => {
     const data = await res.json();
     expect(data.progress.completed).toBe(true);
   });
+
+  it("watchedSec only ever increases", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: enrolledStudent.id },
+    } as never);
+    await POST(request({ lessonId, watchedSec: 300 }));
+    const res = await POST(request({ lessonId, watchedSec: 50 }));
+    expect((await res.json()).progress.watchedSec).toBe(300);
+  });
+
+  it("never un-completes a finished lesson", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: enrolledStudent.id },
+    } as never);
+    // an earlier test set completed: true; a plain watchedSec ping must not reset it
+    const res = await POST(request({ lessonId, watchedSec: 305 }));
+    expect((await res.json()).progress.completed).toBe(true);
+  });
 });

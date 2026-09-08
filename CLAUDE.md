@@ -86,6 +86,11 @@ A full audit on 2026-09-06 found and fixed several real, exploitable bugs. These
 - Modules (units) have real CRUD now (`POST /api/modules`, `DELETE /api/modules/[id]`) — previously they could only be created via `prisma/seed.ts`. There's still no reorder UI; `order` is set by append-length on create.
 - Every destructive admin action (delete lesson/module/resource/question) must have a `confirm()` dialog — this was inconsistent before (only lesson delete had one) and has since been made consistent; keep it that way for any new delete button.
 
+## Lesson video progress
+- `VideoPlayer.tsx` is a **client** component that auto-tracks watching: it pings `POST /api/progress` with `watchedSec` (throttled ~12s, and on pause/end/pagehide) and, at **≥90% watched**, sends `completed: true` — no button. It also **resumes** playback at the saved `watchedSec`. `MarkCompleteButton` stays as a manual fallback.
+- Works for **direct files** (`<video>` events) and **YouTube** (the IFrame API — `www.youtube.com` is in the CSP `script-src`). Other embeds render in a plain `<iframe>` with no tracking. `videoKind()` / `youTubeId()` in `src/lib/video-url.ts`.
+- `POST /api/progress` is **monotonic**: `watchedSec` only ever increases (scrubbing back can't lose it) and `completed` can't be flipped back to false through this route. Rate-limited (150 / 5 min / user — the player pings often).
+
 ## Lesson videos
 - Videos are hosted on **YouTube (uploaded as "Unlisted")**, not uploaded to app storage. This was a deliberate choice: Neon Object Storage was evaluated (already-connected, S3-compatible) but its free plan's 5GB/month bandwidth is shared across the whole app and would be exhausted fast by real video-streaming traffic — YouTube absorbs that cost forever regardless of scale. Don't build a file-upload-to-storage feature for lesson videos without re-raising this tradeoff with the user first.
 - Admins paste a normal YouTube URL (`youtube.com/watch?v=...`, `youtu.be/...`, or `/shorts/...`) into the lesson's video-URL field — `src/lib/video-url.ts`'s `toEmbeddableUrl()` converts it to the `/embed/` form at render time in `VideoPlayer.tsx`, since YouTube refuses to load its normal watch links inside an `<iframe>`. The stored `Lesson.videoUrl` stays as whatever the admin actually pasted (not rewritten) — conversion is display-only.

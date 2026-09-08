@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const progressSchema = z.object({
@@ -36,9 +37,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "يجب الاشتراك في الكورس أولًا." }, { status: 403 });
   }
 
+  // The video player pings this every ~5–12s while playing.
+  if (!(await checkRateLimit(`progress:${userId}`, 150, 5 * 60 * 1000))) {
+    return NextResponse.json({ error: "طلبات كثيرة." }, { status: 429 });
+  }
+
+  const existing = await db.lessonProgress.findUnique({
+    where: { userId_lessonId: { userId, lessonId } },
+  });
+  // `watchedSec` only ever grows (scrubbing back mustn't lose progress) and a
+  // completed lesson can't be un-completed through this route.
+  const nextWatched =
+    watchedSec !== undefined ? Math.max(existing?.watchedSec ?? 0, watchedSec) : undefined;
+  const nextCompleted =
+    completed !== undefined ? (existing?.completed ?? false) || completed : undefined;
+
   const progress = await db.lessonProgress.upsert({
     where: { userId_lessonId: { userId, lessonId } },
-    update: { completed, watchedSec },
+    update: { completed: nextCompleted, watchedSec: nextWatched },
     create: { userId, lessonId, completed: completed ?? false, watchedSec: watchedSec ?? 0 },
   });
 
