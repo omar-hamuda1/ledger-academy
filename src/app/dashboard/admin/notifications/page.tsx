@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireScopePage } from "@/lib/require-admin";
 import { BellRing } from "lucide-react";
 import { Pagination } from "@/components/admin/Pagination";
 import { ComposeNotificationForm } from "@/components/admin/ComposeNotificationForm";
@@ -13,6 +14,7 @@ export default async function AdminNotificationsPage({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
+  await requireScopePage("notifications");
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 

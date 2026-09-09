@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireScopePage } from "@/lib/require-admin";
 import {
   StudentProgressTable,
   type StudentProgressRow,
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 const MAX_ROWS = 500;
 
 export default async function AdminProgressPage() {
+  await requireScopePage("progress");
   const students = await db.user.findMany({
     where: { role: "STUDENT" },
     orderBy: { createdAt: "desc" },

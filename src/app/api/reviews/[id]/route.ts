@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { moderateReviewSchema } from "@/lib/validators/reviews";
 import { logAudit } from "@/lib/audit";
 
@@ -12,7 +12,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("reviews");
   if (!admin) {
     return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
   }
@@ -62,7 +62,7 @@ export async function DELETE(
   }
 
   const isOwner = review.userId === userId;
-  const admin = isOwner ? null : await requireAdmin();
+  const admin = isOwner ? null : await requireScope("reviews");
   if (!isOwner && !admin) {
     return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
   }

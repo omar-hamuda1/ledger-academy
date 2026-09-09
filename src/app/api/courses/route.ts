@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { createCourseSchema } from "@/lib/validators/course";
 import { MIN_EGP_PRICE } from "@/lib/pricing";
 import { logAudit } from "@/lib/audit";
@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("courses");
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
 
   const body = await req.json().catch(() => null);

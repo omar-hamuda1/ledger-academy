@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireScopePage } from "@/lib/require-admin";
 import { notFound } from "next/navigation";
 import { ArrowRight, Users, UserX, Trophy } from "lucide-react";
 import { getCourseInsights } from "@/lib/course-insights";
@@ -10,6 +11,7 @@ export default async function CourseInsightsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireScopePage("courses");
   const { id } = await params;
   const data = await getCourseInsights(id);
   if (!data) notFound();

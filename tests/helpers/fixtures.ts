@@ -4,7 +4,7 @@ import { generateCode } from "@/lib/prepaid-codes";
 
 export async function createUser(
   role: "ADMIN" | "STUDENT" = "STUDENT",
-  opts: { superAdmin?: boolean } = {},
+  opts: { superAdmin?: boolean; restrictedScopes?: string[] } = {},
 ) {
   return db.user.create({
     data: {
@@ -13,6 +13,7 @@ export async function createUser(
       passwordHash: "x",
       role,
       superAdmin: opts.superAdmin ?? false,
+      restrictedScopes: opts.restrictedScopes ?? [],
     },
   });
 }

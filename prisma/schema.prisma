@@ -22,6 +22,7 @@ model User {
   createdAt    DateTime  @default(now())
   disabledAt   DateTime? // set by an admin -> login is refused
   superAdmin   Boolean   @default(false) // protected: only another super-admin (or direct DB/CLI) can change this account's role/status/password. Granted only via `npm run admin:super`, never through the API/UI.
+  restrictedScopes String[] @default([]) // ADMIN deny-list: dashboard sections this admin is blocked from (keys in src/lib/authz.ts). Empty = full access. Super-admins ignore it. Written only by the super-admin-only `setPermissions` action on PATCH /api/users/[id].
 
   enrollments           Enrollment[]
   progress              LessonProgress[]

@@ -1,7 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { reviewCodeOrderSchema } from "@/lib/validators/code-orders";
 import { generateCode, formatCode } from "@/lib/prepaid-codes";
 import { logAudit } from "@/lib/audit";
@@ -12,7 +12,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("codes");
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
 
   const { id } = await params;

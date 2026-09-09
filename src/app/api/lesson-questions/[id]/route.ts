@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { logAudit } from "@/lib/audit";
 
 // Delete a question (its answers cascade). The asker's own, or any (admin).
@@ -23,7 +23,7 @@ export async function DELETE(
   }
 
   const isOwner = question.userId === userId;
-  const admin = isOwner ? null : await requireAdmin();
+  const admin = isOwner ? null : await requireScope("courses");
   if (!isOwner && !admin) {
     return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
   }

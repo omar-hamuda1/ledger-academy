@@ -26,21 +26,22 @@ import { NotificationBell } from "./NotificationBell";
 import { useT } from "@/i18n/LocaleProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { MessageKey } from "@/i18n/translate";
+import { adminHasScope, type AdminScope } from "@/lib/authz";
 
 const navConfig = {
   admin: {
     roleLabelKey: "shell.adminRole" as MessageKey,
     items: [
       { href: "/dashboard/admin", key: "shell.nav.adminHome" as MessageKey, icon: LayoutDashboard },
-      { href: "/dashboard/admin/courses", key: "shell.nav.courses" as MessageKey, icon: Banknote },
-      { href: "/dashboard/admin/lessons", key: "shell.nav.lessons" as MessageKey, icon: BookOpen },
-      { href: "/dashboard/admin/progress", key: "shell.nav.progress" as MessageKey, icon: TrendingUp },
-      { href: "/dashboard/admin/users", key: "shell.nav.users" as MessageKey, icon: Users },
-      { href: "/dashboard/admin/prepaid-codes", key: "shell.nav.prepaidCodes" as MessageKey, icon: Ticket },
-      { href: "/dashboard/admin/code-orders", key: "shell.nav.codeOrders" as MessageKey, icon: Inbox },
-      { href: "/dashboard/admin/notifications", key: "shell.nav.notifications" as MessageKey, icon: BellRing },
-      { href: "/dashboard/admin/settings", key: "shell.nav.settings" as MessageKey, icon: Settings },
-      { href: "/dashboard/admin/audit", key: "shell.nav.audit" as MessageKey, icon: History },
+      { href: "/dashboard/admin/courses", key: "shell.nav.courses" as MessageKey, icon: Banknote, scope: "courses" as AdminScope },
+      { href: "/dashboard/admin/lessons", key: "shell.nav.lessons" as MessageKey, icon: BookOpen, scope: "courses" as AdminScope },
+      { href: "/dashboard/admin/progress", key: "shell.nav.progress" as MessageKey, icon: TrendingUp, scope: "progress" as AdminScope },
+      { href: "/dashboard/admin/users", key: "shell.nav.users" as MessageKey, icon: Users, scope: "users" as AdminScope },
+      { href: "/dashboard/admin/prepaid-codes", key: "shell.nav.prepaidCodes" as MessageKey, icon: Ticket, scope: "codes" as AdminScope },
+      { href: "/dashboard/admin/code-orders", key: "shell.nav.codeOrders" as MessageKey, icon: Inbox, scope: "codes" as AdminScope },
+      { href: "/dashboard/admin/notifications", key: "shell.nav.notifications" as MessageKey, icon: BellRing, scope: "notifications" as AdminScope },
+      { href: "/dashboard/admin/settings", key: "shell.nav.settings" as MessageKey, icon: Settings, scope: "settings" as AdminScope },
+      { href: "/dashboard/admin/audit", key: "shell.nav.audit" as MessageKey, icon: History, scope: "audit" as AdminScope },
     ],
   },
   student: {
@@ -56,16 +57,26 @@ const navConfig = {
 export function DashboardShell({
   role,
   userName,
+  superAdmin = false,
+  restrictedScopes = [],
   children,
 }: {
   role: keyof typeof navConfig;
   userName?: string | null;
+  /** Admin only: hide nav items the account is restricted from. */
+  superAdmin?: boolean;
+  restrictedScopes?: string[];
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const t = useT();
-  const { roleLabelKey, items: navItems } = navConfig[role];
+  const { roleLabelKey, items } = navConfig[role];
+  const navItems = items.filter(
+    (item) =>
+      !("scope" in item) ||
+      adminHasScope({ superAdmin, restrictedScopes }, item.scope),
+  );
 
   const sidebarContent = (
     <>

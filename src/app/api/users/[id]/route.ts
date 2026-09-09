@@ -35,21 +35,51 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "المستخدم غير موجود." }, { status: 404 });
   }
 
+  // Set which dashboard sections an admin is blocked from (deny-list). This is
+  // the only writer of `restrictedScopes` and is super-admin only — a regular
+  // admin can never widen anyone's powers (nor their own: `id === admin.id` is
+  // rejected above).
+  if (parsed.data.action === "setPermissions") {
+    if (!admin.superAdmin) {
+      return NextResponse.json(
+        { error: "لا يمكن تعديل الصلاحيات إلا لمسؤول رئيسي." },
+        { status: 403 },
+      );
+    }
+    if (target.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "الصلاحيات تُضبط لحسابات المحاضرين فقط." },
+        { status: 400 },
+      );
+    }
+    if (target.superAdmin) {
+      return NextResponse.json(
+        { error: "لا يمكن تقييد صلاحيات مسؤول رئيسي." },
+        { status: 400 },
+      );
+    }
+    const restrictedScopes = [...new Set(parsed.data.restrictedScopes)];
+    const user = await db.user.update({ where: { id }, data: { restrictedScopes } });
+    await logAudit({
+      actorId: admin.id,
+      actorEmail: admin.email ?? "unknown",
+      action: "user.permissions_change",
+      targetType: "User",
+      targetId: id,
+      metadata: { restricted: restrictedScopes.join(",") || "none" },
+    });
+    return NextResponse.json({ user });
+  }
+
   // A super-admin account is protected: only another super-admin can change its
   // role, disable it, or reset its password. There is no API/UI path to grant
   // or revoke `superAdmin` itself — that's `npm run admin:super` (direct DB)
   // only — so a regular admin can never touch a protected account from here.
-  if (target.superAdmin) {
-    const actor = await db.user.findUnique({
-      where: { id: admin.id },
-      select: { superAdmin: true },
-    });
-    if (!actor?.superAdmin) {
-      return NextResponse.json(
-        { error: "لا يمكن تعديل حساب مسؤول رئيسي." },
-        { status: 403 },
-      );
-    }
+  if (target.superAdmin && !admin.superAdmin) {
+    return NextResponse.json(
+      { error: "لا يمكن تعديل حساب مسؤول رئيسي." },
+      { status: 403 },
+    );
   }
 
   // Defense-in-depth "keep >=1 active ADMIN" check. Largely belt-and-suspenders
@@ -137,14 +167,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "المستخدم غير موجود." }, { status: 404 });
   }
 
-  if (target.superAdmin) {
-    const actor = await db.user.findUnique({
-      where: { id: admin.id },
-      select: { superAdmin: true },
-    });
-    if (!actor?.superAdmin) {
-      return NextResponse.json({ error: "لا يمكن حذف حساب مسؤول رئيسي." }, { status: 403 });
-    }
+  if (target.superAdmin && !admin.superAdmin) {
+    return NextResponse.json({ error: "لا يمكن حذف حساب مسؤول رئيسي." }, { status: 403 });
   }
 
   if (target.role === "ADMIN") {

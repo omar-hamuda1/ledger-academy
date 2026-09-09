@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { requireScopePage } from "@/lib/require-admin";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { Users } from "lucide-react";
@@ -32,6 +33,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ page?: string; q?: string; role?: string; status?: string }>;
 }) {
+  await requireScopePage("users");
   const { page: pageParam, q, role, status } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
@@ -131,6 +133,13 @@ export default async function AdminUsersPage({
                               معطّل
                             </span>
                           )}
+                          {user.role === "ADMIN" &&
+                            !user.superAdmin &&
+                            user.restrictedScopes.length > 0 && (
+                              <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                                صلاحيات محدودة
+                              </span>
+                            )}
                         </span>
                       </div>
                     </td>
@@ -157,6 +166,9 @@ export default async function AdminUsersPage({
                           userEmail={user.email}
                           role={user.role as "ADMIN" | "STUDENT"}
                           disabled={user.disabledAt !== null}
+                          restrictedScopes={user.restrictedScopes}
+                          targetIsSuperAdmin={user.superAdmin}
+                          viewerIsSuperAdmin={viewerIsSuperAdmin}
                         />
                       )}
                     </td>

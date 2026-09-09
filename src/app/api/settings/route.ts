@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { updateSiteSettingsSchema } from "@/lib/validators/settings";
 import { bustSiteSettingsCache } from "@/lib/site-settings";
 import { logAudit } from "@/lib/audit";
 
 export async function PATCH(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("settings");
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
 
   const body = await req.json().catch(() => null);

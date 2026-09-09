@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { formatCode } from "@/lib/prepaid-codes";
 import { logAudit } from "@/lib/audit";
 
@@ -15,7 +15,7 @@ function csvCell(value: string): string {
 // semantics as the admin page). No pagination — the whole filtered set, up to
 // MAX_ROWS.
 export async function GET(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("codes");
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
 
   const url = new URL(req.url);

@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { requireScopePage } from "@/lib/require-admin";
 import { db } from "@/lib/db";
 import { Pagination } from "@/components/admin/Pagination";
 import { AuditFilters, AUDIT_CATEGORY_LABELS } from "@/components/admin/AuditFilters";
@@ -28,6 +29,7 @@ const ACTION_LABELS: Record<string, string> = {
   "settings.update": "تحديث الإعدادات العامة",
   "user.role_change": "تغيير دور مستخدم",
   "user.password_reset": "إعادة تعيين كلمة مرور",
+  "user.permissions_change": "تعديل صلاحيات محاضر",
   "user.delete": "حذف مستخدم نهائيًا",
   "notification.broadcast": "إرسال إشعار عام",
   "code_order.approve": "قبول طلب كود",
@@ -80,6 +82,7 @@ export default async function AdminAuditPage({
 }: {
   searchParams: Promise<{ page?: string; q?: string; cat?: string; from?: string; to?: string }>;
 }) {
+  await requireScopePage("audit");
   const { page: pageParam, q, cat, from, to } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 

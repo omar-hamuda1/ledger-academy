@@ -1,9 +1,11 @@
 import { getSiteSettings } from "@/lib/site-settings";
+import { requireScopePage } from "@/lib/require-admin";
 import { SiteSettingsForm } from "@/components/admin/SiteSettingsForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
+  await requireScopePage("settings");
   const settings = await getSiteSettings();
 
   return (

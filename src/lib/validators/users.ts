@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ADMIN_SCOPES } from "@/lib/authz";
 
 // Admin actions on another user's account (PATCH /api/users/[id]).
 export const updateUserSchema = z.discriminatedUnion("action", [
@@ -8,5 +9,11 @@ export const updateUserSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("setPassword"),
     password: z.string().min(8, "8 أحرف على الأقل").max(72).optional(),
+  }),
+  // Super-admin only: set the target admin's blocked dashboard sections
+  // (deny-list). An empty array clears all restrictions.
+  z.object({
+    action: z.literal("setPermissions"),
+    restrictedScopes: z.array(z.enum(ADMIN_SCOPES)).max(ADMIN_SCOPES.length),
   }),
 ]);

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireScopePage } from "@/lib/require-admin";
 import { GraduationCap, PlusCircle, Pencil, BarChart3 } from "lucide-react";
 import { db } from "@/lib/db";
 import { EditCoursePriceForm } from "@/components/admin/EditCoursePriceForm";
@@ -13,6 +14,7 @@ export default async function AdminCoursesPage({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
+  await requireScopePage("courses");
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 

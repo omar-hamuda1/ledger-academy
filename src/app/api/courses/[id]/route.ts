@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { updateCourseSchema } from "@/lib/validators/course";
 import { MIN_EGP_PRICE } from "@/lib/pricing";
 import { logAudit } from "@/lib/audit";
 import { revalidateCourseSurfaces } from "@/lib/revalidate";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("courses");
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
 
   const { id } = await params;

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { logAudit } from "@/lib/audit";
 
 const bodySchema = z.object({ userId: z.string().min(1) });
@@ -14,7 +14,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("courses");
   if (!admin) {
     return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
   }

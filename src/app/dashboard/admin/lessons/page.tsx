@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireScopePage } from "@/lib/require-admin";
 import { BookOpen, Pencil, PlayCircle } from "lucide-react";
 import { db } from "@/lib/db";
 import { AddLessonForm } from "@/components/admin/AddLessonForm";
@@ -10,6 +11,7 @@ import { ReorderButtons } from "@/components/admin/ReorderButtons";
 export const dynamic = "force-dynamic";
 
 export default async function AdminLessonsPage() {
+  await requireScopePage("courses");
   const courses = await db.course.findMany({
     orderBy: { createdAt: "asc" },
     include: {

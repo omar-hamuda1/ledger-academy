@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { requireScopePage } from "@/lib/require-admin";
 import { ArrowRight } from "lucide-react";
 import { CreateCourseForm } from "@/components/admin/CreateCourseForm";
 
-export default function NewCoursePage() {
+export default async function NewCoursePage() {
+  await requireScopePage("courses");
   return (
     <div className="p-6 md:p-8">
       <Link

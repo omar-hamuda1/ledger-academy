@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireScope } from "@/lib/require-admin";
 import { visibleNotificationsWhere } from "@/lib/notifications";
 import { broadcastToStudents } from "@/lib/notify";
 import { createNotificationSchema } from "@/lib/validators/notifications";
@@ -56,7 +56,7 @@ export async function GET() {
 
 // Admin composes a broadcast to all students.
 export async function POST(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireScope("notifications");
   if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
 
   const body = await req.json().catch(() => null);

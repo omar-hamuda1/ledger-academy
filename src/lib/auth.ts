@@ -46,7 +46,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error("تم تعطيل هذا الحساب. تواصل مع إدارة المنصة.");
         }
 
-        return { id: user.id, name: user.name, email: user.email, role: user.role };
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          superAdmin: user.superAdmin,
+          restrictedScopes: user.restrictedScopes,
+        };
       },
     }),
   ],
@@ -55,6 +62,12 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.sub = user.id;
+        // Carried for the middleware backstop + sidebar. Set at login only (no
+        // per-request DB read); a permission change reaches the token on the
+        // next login / 24h refresh. The API + page guards re-read the DB and are
+        // the authoritative check — same trade-off as role changes.
+        token.superAdmin = user.superAdmin;
+        token.restrictedScopes = user.restrictedScopes;
       }
       return token;
     },
@@ -62,6 +75,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.role && token.sub) {
         session.user.role = token.role;
         session.user.id = token.sub;
+        session.user.superAdmin = token.superAdmin ?? false;
+        session.user.restrictedScopes = token.restrictedScopes ?? [];
       }
       return session;
     },

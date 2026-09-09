@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ShieldPlus, ShieldMinus, Ban, RotateCcw, KeyRound, Trash2 } from "lucide-react";
+import { ShieldPlus, ShieldMinus, Ban, RotateCcw, KeyRound, Trash2, SlidersHorizontal } from "lucide-react";
+import { AdminPermissionsModal } from "./AdminPermissionsModal";
 
 type Body =
   | { action: "setRole"; role: "ADMIN" | "STUDENT" }
@@ -15,15 +16,23 @@ export function UserRowActions({
   userEmail,
   role,
   disabled,
+  restrictedScopes = [],
+  targetIsSuperAdmin = false,
+  viewerIsSuperAdmin = false,
 }: {
   userId: string;
   userName: string;
   userEmail: string;
   role: "ADMIN" | "STUDENT";
   disabled: boolean;
+  restrictedScopes?: string[];
+  targetIsSuperAdmin?: boolean;
+  viewerIsSuperAdmin?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [showPerms, setShowPerms] = useState(false);
+  const canEditPerms = viewerIsSuperAdmin && role === "ADMIN" && !targetIsSuperAdmin;
 
   async function send(body: Body, confirmText?: string) {
     if (confirmText && !confirm(confirmText)) return;
@@ -115,6 +124,29 @@ export function UserRowActions({
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+      {showPerms && (
+        <AdminPermissionsModal
+          userId={userId}
+          userName={userName}
+          restrictedScopes={restrictedScopes}
+          onClose={() => setShowPerms(false)}
+        />
+      )}
+
+      {canEditPerms && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => setShowPerms(true)}
+          className={btn}
+          title="الصلاحيات"
+          aria-label="الصلاحيات"
+        >
+          <SlidersHorizontal size={13} />
+          <span className={label}>الصلاحيات</span>
+        </button>
+      )}
+
       <button
         type="button"
         disabled={busy}

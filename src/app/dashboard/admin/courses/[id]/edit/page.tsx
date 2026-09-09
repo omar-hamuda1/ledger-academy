@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireScopePage } from "@/lib/require-admin";
 import { notFound } from "next/navigation";
 import { ArrowRight, BarChart3 } from "lucide-react";
 import { db } from "@/lib/db";
@@ -8,6 +9,7 @@ import { CourseRoster, type RosterRow } from "@/components/admin/CourseRoster";
 export const dynamic = "force-dynamic";
 
 export default async function EditCoursePage({ params }: { params: Promise<{ id: string }> }) {
+  await requireScopePage("courses");
   const { id } = await params;
   const course = await db.course.findUnique({ where: { id } });
   if (!course) notFound();

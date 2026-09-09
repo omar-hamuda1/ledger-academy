@@ -1,6 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextFetchEvent, NextRequest } from "next/server";
+import { scopeForPath } from "@/lib/authz";
 
 const STAGING_PASSWORD = process.env.STAGING_PASSWORD;
 const GATE_COOKIE = "staging_gate";
@@ -96,9 +97,24 @@ async function stagingGate(req: NextRequest): Promise<NextResponse | null> {
 
 const dashboardAuth = withAuth(
   function middleware(req) {
-    const role = (req.nextauth.token as { role?: string } | null)?.role;
-    if (req.nextUrl.pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
+    const { pathname } = req.nextUrl;
+    const token = req.nextauth.token as
+      | { role?: string; superAdmin?: boolean; restrictedScopes?: string[] }
+      | null;
+    const role = token?.role;
+
+    if (pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard/student", req.url));
+    }
+
+    // Permission-scope backstop for restricted admins. Best-effort: the token
+    // can lag a change by up to the 24h refresh — the page + API guards re-read
+    // the DB and are authoritative.
+    if (pathname.startsWith("/dashboard/admin") && role === "ADMIN" && !token?.superAdmin) {
+      const scope = scopeForPath(pathname);
+      if (scope && (token?.restrictedScopes ?? []).includes(scope)) {
+        return NextResponse.redirect(new URL(`/dashboard/admin?denied=${scope}`, req.url));
+      }
     }
   },
   { callbacks: { authorized: ({ token }) => !!token } },

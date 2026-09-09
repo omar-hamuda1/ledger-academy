@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireScopePage } from "@/lib/require-admin";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { ArrowRight, FileText, HelpCircle } from "lucide-react";
@@ -25,6 +26,7 @@ export default async function EditLessonPage({
 }: {
   params: Promise<{ lessonId: string }>;
 }) {
+  await requireScopePage("courses");
   const { lessonId } = await params;
 
   const lesson = await db.lesson.findUnique({

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireScopePage } from "@/lib/require-admin";
 import { paymentProofStore } from "@/lib/storage";
 import { Pagination } from "@/components/admin/Pagination";
 import {
@@ -21,6 +22,7 @@ export default async function AdminCodeOrdersPage({
 }: {
   searchParams: Promise<{ status?: string; page?: string }>;
 }) {
+  await requireScopePage("codes");
   const { status: statusParam, page: pageParam } = await searchParams;
   const active = STATUSES.find((s) => s.key === statusParam) ?? STATUSES[0];
   const page = Math.max(1, Number(pageParam) || 1);

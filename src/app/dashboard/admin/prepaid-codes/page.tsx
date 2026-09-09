@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import { requireScopePage } from "@/lib/require-admin";
 import { db } from "@/lib/db";
 import { Pagination } from "@/components/admin/Pagination";
 import { GeneratePrepaidCodesForm } from "@/components/admin/GeneratePrepaidCodesForm";
@@ -17,6 +18,7 @@ export default async function AdminPrepaidCodesPage({
 }: {
   searchParams: Promise<{ courseId?: string; status?: string; page?: string }>;
 }) {
+  await requireScopePage("codes");
   const { courseId, status, page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
