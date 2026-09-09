@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { Pagination } from "@/components/admin/Pagination";
 import { UserRowActions } from "@/components/admin/UserRowActions";
 import { UsersFilters } from "@/components/admin/UsersFilters";
+import { Avatar } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,6 @@ const ROLE_STYLE: Record<string, string> = {
   ADMIN: "bg-gold-400/10 text-gold-400",
   STUDENT: "bg-emerald-400/10 text-emerald-400",
 };
-
-function initials(name: string) {
-  return name.trim().slice(0, 1).toUpperCase();
-}
 
 const dateFmt = new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium" });
 
@@ -117,9 +114,7 @@ export default async function AdminUsersPage({
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-400/10 text-xs font-bold text-gold-400">
-                          {initials(user.name)}
-                        </span>
+                        <Avatar name={user.name} size="sm" />
                         <span className="flex items-center gap-2">
                           {user.name}
                           {isSelf && <span className="text-[11px] text-slate-400">(أنت)</span>}

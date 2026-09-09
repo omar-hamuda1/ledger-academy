@@ -7,6 +7,7 @@ import Link from "next/link";
 import { UserPlus, ShieldCheck } from "lucide-react";
 import { AuthLayout, AuthFormCard, AuthError, OtpCodeField } from "@/components/auth/AuthLayout";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { Avatar } from "@/components/Avatar";
 import { displayNameError } from "@/lib/validators/name";
 import { phoneError } from "@/lib/validators/phone";
 import { useT } from "@/i18n/LocaleProvider";
@@ -221,18 +222,7 @@ export default function RegisterPage() {
           <div>
             <label className="mb-1.5 block text-sm text-slate-300">{t("auth.register.photo")}</label>
             <div className="flex items-center gap-3">
-              {photoPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={photoPreview}
-                  alt=""
-                  className="h-12 w-12 shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold-400/10 text-sm font-bold text-gold-400">
-                  {name.trim().slice(0, 1).toUpperCase() || "؟"}
-                </span>
-              )}
+              <Avatar name={name} url={photoPreview} size="md" />
               <label className="cursor-pointer rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 transition hover:border-gold-400/40 hover:text-gold-400">
                 {t("auth.register.photoChoose")}
                 <input

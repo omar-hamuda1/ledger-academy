@@ -3,17 +3,12 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Avatar } from "@/components/Avatar";
 
 const MAX = 3 * 1024 * 1024;
 const TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export function AvatarControl({
-  url,
-  fallbackLetter,
-}: {
-  url: string | null;
-  fallbackLetter: string;
-}) {
+export function AvatarControl({ url, name }: { url: string | null; name: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -61,14 +56,7 @@ export function AvatarControl({
 
   return (
     <div className="flex items-center gap-4">
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover" />
-      ) : (
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gold-400/10 text-2xl font-extrabold text-gold-400">
-          {fallbackLetter}
-        </span>
-      )}
+      <Avatar name={name} url={url} size="lg" />
       <div className="flex flex-col items-start gap-1">
         <input
           ref={inputRef}

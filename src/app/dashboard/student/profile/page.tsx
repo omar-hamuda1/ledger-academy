@@ -59,7 +59,7 @@ export default async function StudentProfilePage() {
 
       <div className="mt-8 max-w-2xl rounded-card border border-white/10 bg-navy-900/60 p-6 shadow-card">
         <div className="flex flex-wrap items-center gap-4">
-          <AvatarControl url={photoUrl} fallbackLetter={user.name.trim().slice(0, 1).toUpperCase()} />
+          <AvatarControl url={photoUrl} name={user.name} />
           <div>
             <div className="text-base font-bold">
               <InlineProfileField field="name" value={user.name} />

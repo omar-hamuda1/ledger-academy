@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, ArrowUp, ArrowDown, Users } from "lucide-react";
+import { Avatar } from "@/components/Avatar";
 
 export type StudentProgressRow = {
   id: string;
@@ -43,10 +44,6 @@ function relativeDays(ts: number): string {
   if (days <= -30) return dateFmt.format(ts);
   if (days === 0) return "اليوم";
   return relFmt.format(days, "day");
-}
-
-function initials(name: string) {
-  return name.trim().slice(0, 1).toUpperCase();
 }
 
 export function StudentProgressTable({
@@ -176,9 +173,7 @@ export function StudentProgressTable({
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-400/10 text-xs font-bold text-gold-400">
-                        {initials(row.name)}
-                      </span>
+                      <Avatar name={row.name} size="sm" />
                       <div className="min-w-0">
                         <p className="truncate font-medium text-white">{row.name}</p>
                         <p className="truncate text-xs text-slate-400">{row.email}</p>
