@@ -1,6 +1,3 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import {
   Sparkles,
   ArrowLeft,
@@ -13,6 +10,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { AnimatedCounter } from "./AnimatedCounter";
+import { Reveal } from "./Reveal";
 
 type Stat = { id: string; value: number; label: string };
 
@@ -23,21 +21,10 @@ const STAT_ICON: Record<string, typeof BookOpen> = {
   quizzes: ClipboardCheck,
 };
 
-const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.09, delayChildren: 0.04 } },
-};
-const rise = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
-};
-
+// Plain server component now — the entrance animations are CSS (globals.css
+// `animate-*` utilities), so there's no framer-motion in the homepage bundle.
+// The <h1> deliberately does NOT animate: it's the LCP element.
 export function Hero({ stats }: { stats: Stat[] }) {
-  const reduce = useReducedMotion();
-  const start = reduce ? false : "hidden";
-
   return (
     <section id="home" className="relative overflow-hidden">
       {/* one restrained accent, not a pair of glow blobs */}
@@ -46,36 +33,30 @@ export function Hero({ stats }: { stats: Stat[] }) {
       <div className="mx-auto max-w-7xl px-6 pb-16 pt-16 md:pb-20 md:pt-20">
         <div className="grid items-center gap-14 md:grid-cols-[1.05fr_0.95fr]">
           {/* copy */}
-          <motion.div variants={container} initial={start} animate="show">
-            <motion.span
-              variants={rise}
-              className="inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-400/10 px-4 py-1 text-xs font-semibold text-gold-300"
-            >
+          <div>
+            <span className="inline-flex animate-slide-up items-center gap-2 rounded-full border border-gold-400/30 bg-gold-400/10 px-4 py-1 text-xs font-semibold text-gold-300">
               <Sparkles size={14} />
               منصة متخصصة لطلاب الثانوية العامة
-            </motion.span>
+            </span>
 
-            <motion.h1
-              variants={rise}
-              className="mt-5 text-4xl font-extrabold leading-[1.15] text-white sm:text-[3.25rem]"
-            >
+            <h1 className="mt-5 text-4xl font-extrabold leading-[1.15] text-white sm:text-[3.25rem]">
               تفوّق في <span className="text-gold-400">إدارة الأعمال</span>
               <br />
               وابنِ أساس مستقبلك المهني
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              variants={rise}
-              className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300"
+            <p
+              className="mt-6 max-w-xl animate-slide-up text-lg leading-relaxed text-slate-300"
+              style={{ animationDelay: "0.08s" }}
             >
               شرح مبسّط للمقرر الرسمي، اختبار تفاعلي بعد كل درس، وأدوات عملية تشتغل
               جوّه المنصة — على يد المحاضر{" "}
               <strong className="font-bold text-white">محمد حسين</strong>.
-            </motion.p>
+            </p>
 
-            <motion.div
-              variants={rise}
-              className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
+            <div
+              className="mt-8 flex animate-slide-up flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
+              style={{ animationDelay: "0.16s" }}
             >
               <a
                 href="#courses"
@@ -91,11 +72,11 @@ export function Hero({ stats }: { stats: Stat[] }) {
                 <PlayCircle size={18} />
                 شاهد درسًا تجريبيًا
               </a>
-            </motion.div>
+            </div>
 
-            <motion.div
-              variants={rise}
-              className="mt-8 flex flex-wrap gap-3 text-xs font-semibold text-slate-300"
+            <div
+              className="mt-8 flex animate-slide-up flex-wrap gap-3 text-xs font-semibold text-slate-300"
+              style={{ animationDelay: "0.24s" }}
             >
               {["٣ مستويات دراسية كاملة", "اختبار بعد كل درس", "تتبع تقدّمك بالكامل"].map((t) => (
                 <span
@@ -106,21 +87,15 @@ export function Hero({ stats }: { stats: Stat[] }) {
                   {t}
                 </span>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* product panel */}
-          <motion.div
-            initial={reduce ? false : { opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
-            className="relative mx-auto w-full max-w-sm"
+          <div
+            className="relative mx-auto w-full max-w-sm animate-scale-in"
+            style={{ animationDelay: "0.15s" }}
           >
-            <motion.div
-              animate={reduce ? undefined : { y: [0, -8, 0] }}
-              transition={reduce ? undefined : { duration: 7, repeat: Infinity, ease: "easeInOut" }}
-              className="relative rounded-card border border-white/10 bg-navy-900 p-4 shadow-elevated"
-            >
+            <div className="relative animate-hero-float rounded-card border border-white/10 bg-navy-900 p-4 shadow-elevated">
               <div className="mb-2.5 flex items-center gap-1.5 px-1">
                 <span className="h-2 w-2 rounded-full bg-white/15" />
                 <span className="h-2 w-2 rounded-full bg-white/15" />
@@ -144,12 +119,7 @@ export function Hero({ stats }: { stats: Stat[] }) {
                 {/* decorative mockup text, not a document heading */}
                 <p className="mt-1 text-base font-bold text-white">الدرس ٣: وظائف المدير الأساسية</p>
                 <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <motion.div
-                    className="h-full bg-gold-400"
-                    initial={reduce ? false : { width: 0 }}
-                    animate={{ width: "68%" }}
-                    transition={{ duration: 1.1, delay: 0.5, ease: "easeOut" }}
-                  />
+                  <div className="h-full animate-hero-grow bg-gold-400" />
                 </div>
                 <p className="mt-2 text-xs text-slate-400">أكملت ٦ من ٩ دروس في هذه الوحدة</p>
               </div>
@@ -178,17 +148,14 @@ export function Hero({ stats }: { stats: Stat[] }) {
                   <p className="text-[11px] text-slate-400">محاضر إدارة الأعمال</p>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
 
         {/* stats — folded into the hero, hairline instead of a bordered band */}
         {stats.length > 0 && (
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+          <Reveal
+            y={12}
             className="mt-16 grid grid-cols-2 gap-6 border-t border-white/10 pt-10 sm:grid-cols-4"
           >
             {stats.map((s) => {
@@ -207,7 +174,7 @@ export function Hero({ stats }: { stats: Stat[] }) {
                 </div>
               );
             })}
-          </motion.div>
+          </Reveal>
         )}
       </div>
     </section>
