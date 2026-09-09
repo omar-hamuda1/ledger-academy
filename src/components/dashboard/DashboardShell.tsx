@@ -20,6 +20,7 @@ import {
   Ticket,
   Inbox,
   BellRing,
+  User,
 } from "lucide-react";
 import { SignOutButton } from "./SignOutButton";
 import { NotificationBell } from "./NotificationBell";
@@ -50,6 +51,7 @@ const navConfig = {
       { href: "/dashboard/student", key: "shell.nav.studentHome" as MessageKey, icon: Home },
       { href: "/dashboard/student/quizzes", key: "shell.nav.quizzes" as MessageKey, icon: ClipboardList },
       { href: "/dashboard/student/tools", key: "shell.nav.tools" as MessageKey, icon: Calculator },
+      { href: "/dashboard/student/profile", key: "shell.nav.profile" as MessageKey, icon: User },
     ],
   },
 } as const;

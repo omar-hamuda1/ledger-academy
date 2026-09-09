@@ -58,7 +58,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = user.role;
         token.sub = user.id;
@@ -68,6 +68,11 @@ export const authOptions: NextAuthOptions = {
         // the authoritative check — same trade-off as role changes.
         token.superAdmin = user.superAdmin;
         token.restrictedScopes = user.restrictedScopes;
+      }
+      // `useSession().update({ name })` from the profile page — keep the header
+      // greeting in sync without a re-login.
+      if (trigger === "update" && typeof session?.name === "string") {
+        token.name = session.name;
       }
       return token;
     },
