@@ -1,11 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Cairo } from "next/font/google";
 import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
 import { useT } from "@/i18n/LocaleProvider";
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export function AuthLayout({
   icon,
@@ -19,7 +17,7 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <div className={`${cairo.className} flex min-h-screen flex-col bg-navy-950 text-slate-100`}>
+    <div className="flex min-h-screen flex-col bg-navy-950 text-slate-100">
       <LedgerHeader />
 
       <main className="flex flex-1 items-center justify-center px-6 py-16">

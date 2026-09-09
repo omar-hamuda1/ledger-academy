@@ -1,10 +1,8 @@
-import { Cairo } from "next/font/google";
 import { ShieldAlert } from "lucide-react";
 import { getSiteSettings } from "@/lib/site-settings";
 import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
 import { LedgerFooter } from "@/components/ledger-academy/LedgerFooter";
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export const revalidate = 300;
 
@@ -12,7 +10,7 @@ export default async function PrivacyPolicyPage() {
   const settings = await getSiteSettings();
 
   return (
-    <div dir="rtl" lang="ar" className={`${cairo.className} flex min-h-screen flex-col bg-navy-950 text-slate-100`}>
+    <div dir="rtl" lang="ar" className="flex min-h-screen flex-col bg-navy-950 text-slate-100">
       <LedgerHeader />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">

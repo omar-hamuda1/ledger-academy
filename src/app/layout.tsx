@@ -6,10 +6,15 @@ import { LocaleProvider } from "@/i18n/LocaleProvider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
+// The single Cairo instance for the whole app. `next/font` dedupes by exact
+// options, so calling Cairo() elsewhere with a different option set (e.g. no
+// `variable`) makes Next load the family twice — every page below just relies
+// on the `cairo.className` already set on <body>.
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-cairo",
+  display: "swap",
 });
 
 export const metadata: Metadata = {

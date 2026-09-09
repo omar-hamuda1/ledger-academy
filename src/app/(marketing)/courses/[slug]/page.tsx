@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { Cairo } from "next/font/google";
 import Link from "next/link";
 import {
   BookOpen,
@@ -27,7 +26,6 @@ import { RateCourseForm } from "@/components/course/RateCourseForm";
 import { Stars } from "@/components/course/Stars";
 import { getSiteSettings } from "@/lib/site-settings";
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export const dynamic = "force-dynamic";
 
@@ -101,7 +99,7 @@ export default async function CourseDetailPage({
   ];
 
   return (
-    <div dir="rtl" lang="ar" className={`${cairo.className} flex min-h-screen flex-col bg-navy-950 text-slate-100`}>
+    <div dir="rtl" lang="ar" className="flex min-h-screen flex-col bg-navy-950 text-slate-100">
       <LedgerHeader />
 
       {/* hero band */}

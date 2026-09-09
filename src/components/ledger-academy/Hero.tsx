@@ -141,7 +141,8 @@ export function Hero({ stats }: { stats: Stat[] }) {
 
               <div className="px-2 pb-1 pt-4">
                 <p className="text-xs font-bold text-blue-400">الوحدة الأولى · مبادئ الإدارة</p>
-                <h3 className="mt-1 text-base font-bold text-white">الدرس ٣: وظائف المدير الأساسية</h3>
+                {/* decorative mockup text, not a document heading */}
+                <p className="mt-1 text-base font-bold text-white">الدرس ٣: وظائف المدير الأساسية</p>
                 <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/10">
                   <motion.div
                     className="h-full bg-gold-400"

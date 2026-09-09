@@ -1,11 +1,9 @@
-import { Cairo } from "next/font/google";
 import { db } from "@/lib/db";
 import { courseMeta } from "@/lib/course-meta";
 import { LedgerHeader } from "@/components/ledger-academy/LedgerHeader";
 import { LedgerFooter } from "@/components/ledger-academy/LedgerFooter";
 import { CourseCard } from "@/components/ledger-academy/CourseCard";
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export const revalidate = 300;
 
@@ -27,7 +25,7 @@ export default async function CourseCatalogPage() {
   });
 
   return (
-    <div dir="rtl" lang="ar" className={`${cairo.className} flex min-h-screen flex-col bg-navy-950 text-slate-100`}>
+    <div dir="rtl" lang="ar" className="flex min-h-screen flex-col bg-navy-950 text-slate-100">
       <LedgerHeader />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-16">
@@ -47,16 +45,19 @@ export default async function CourseCatalogPage() {
             لا توجد كورسات منشورة حاليًا — تابعنا قريبًا.
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-3">
-            {courses.map((course, i) => (
-              <CourseCard
-                key={course.id}
-                course={{ ...course, price: Number(course.price) }}
-                meta={courseMeta(course.modules)}
-                featured={courses.length >= 3 && i === 1}
-              />
-            ))}
-          </div>
+          <>
+            <h2 className="sr-only">قائمة الكورسات المنشورة</h2>
+            <div className="grid gap-6 md:grid-cols-3">
+              {courses.map((course, i) => (
+                <CourseCard
+                  key={course.id}
+                  course={{ ...course, price: Number(course.price) }}
+                  meta={courseMeta(course.modules)}
+                  featured={courses.length >= 3 && i === 1}
+                />
+              ))}
+            </div>
+          </>
         )}
       </main>
 

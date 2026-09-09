@@ -1,4 +1,3 @@
-import { Cairo } from "next/font/google";
 import Link from "next/link";
 import {
   BookOpen,
@@ -22,7 +21,6 @@ import { CourseCard } from "@/components/ledger-academy/CourseCard";
 import { Hero } from "@/components/ledger-academy/Hero";
 import { Reveal } from "@/components/ledger-academy/Reveal";
 
-const cairo = Cairo({ subsets: ["arabic", "latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export const revalidate = 300;
 
@@ -162,9 +160,10 @@ export default async function LandingPage() {
   const previewMeta = preview ? courseMeta(preview.modules) : null;
 
   return (
-    <div dir="rtl" lang="ar" className={`${cairo.className} min-h-screen bg-navy-950 text-slate-100`}>
+    <div dir="rtl" lang="ar" className="min-h-screen bg-navy-950 text-slate-100">
       <LedgerHeader />
 
+      <main>
       <Hero stats={heroStats} />
 
       {/* ---------- Why — asymmetric, rows not cards ---------- */}
@@ -238,9 +237,9 @@ export default async function LandingPage() {
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold-400/15 text-gold-400">
                             <BookOpen size={16} />
                           </span>
-                          <h4 className="text-sm font-bold text-white">
+                          <h3 className="text-sm font-bold text-white">
                             الوحدة {i + 1}: {module.title}
-                          </h4>
+                          </h3>
                         </div>
                         <span className="text-xs text-slate-400">
                           {module.lessons.length.toLocaleString("ar-EG")} دروس
@@ -312,20 +311,22 @@ export default async function LandingPage() {
           title="كيف تشترك وتبدأ التعلّم"
           body="مفيش دفع أونلاين معقّد — التحويل يدوي وسريع، والتفعيل بعد المراجعة مباشرة."
         />
-        <ol className="relative mt-14 grid gap-10 md:grid-cols-3">
+        <div className="relative mt-14">
           <span className="pointer-events-none absolute inset-x-0 top-5 hidden h-px bg-gradient-to-l from-transparent via-white/15 to-transparent md:block" />
-          {steps.map((s, i) => (
-            <Reveal key={s.n} delay={i * 0.1}>
-              <li className="relative">
-                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gold-400/40 bg-navy-950 text-sm font-extrabold text-gold-400">
-                  {s.n}
-                </span>
-                <h3 className="mt-4 text-base font-bold text-white">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.body}</p>
+          <ol className="grid gap-10 md:grid-cols-3">
+            {steps.map((s, i) => (
+              <li key={s.n} className="relative">
+                <Reveal delay={i * 0.1}>
+                  <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gold-400/40 bg-navy-950 text-sm font-extrabold text-gold-400">
+                    {s.n}
+                  </span>
+                  <h3 className="mt-4 text-base font-bold text-white">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.body}</p>
+                </Reveal>
               </li>
-            </Reveal>
-          ))}
-        </ol>
+            ))}
+          </ol>
+        </div>
       </section>
 
       {/* ---------- About presenter ---------- */}
@@ -426,6 +427,7 @@ export default async function LandingPage() {
           </div>
         </Reveal>
       </section>
+      </main>
 
       <LedgerFooter />
     </div>
