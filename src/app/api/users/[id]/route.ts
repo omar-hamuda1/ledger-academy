@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/require-admin";
 import { updateUserSchema } from "@/lib/validators/users";
+import { deleteUserCascade } from "@/lib/delete-user";
 import { logAudit } from "@/lib/audit";
 
 // Admin manages another account: promote/demote between ADMIN and STUDENT,
@@ -117,4 +118,67 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     targetId: id,
   });
   return NextResponse.json({ user });
+}
+
+// Hard-delete an account and its footprint (see src/lib/delete-user.ts).
+// Irreversible — "disable" is the non-destructive option. Same guards as PATCH,
+// plus: an instructor who still owns courses can't be deleted.
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await requireAdmin();
+  if (!admin) return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء." }, { status: 403 });
+
+  const { id } = await params;
+  if (id === admin.id) {
+    return NextResponse.json({ error: "لا يمكنك حذف حسابك من هنا." }, { status: 400 });
+  }
+
+  const target = await db.user.findUnique({ where: { id } });
+  if (!target) {
+    return NextResponse.json({ error: "المستخدم غير موجود." }, { status: 404 });
+  }
+
+  if (target.superAdmin) {
+    const actor = await db.user.findUnique({
+      where: { id: admin.id },
+      select: { superAdmin: true },
+    });
+    if (!actor?.superAdmin) {
+      return NextResponse.json({ error: "لا يمكن حذف حساب مسؤول رئيسي." }, { status: 403 });
+    }
+  }
+
+  if (target.role === "ADMIN") {
+    const otherActiveAdmins = await db.user.count({
+      where: { role: "ADMIN", disabledAt: null, id: { not: target.id } },
+    });
+    if (otherActiveAdmins === 0) {
+      return NextResponse.json(
+        { error: "يجب أن يبقى محاضر واحد نشط على الأقل." },
+        { status: 409 },
+      );
+    }
+  }
+
+  const ownedCourses = await db.course.count({ where: { instructorId: id } });
+  if (ownedCourses > 0) {
+    return NextResponse.json(
+      {
+        error: `هذا المستخدم محاضر يملك ${ownedCourses} كورس. أعد إسناد كورساته أو احذفها أولًا.`,
+      },
+      { status: 409 },
+    );
+  }
+
+  await deleteUserCascade({ id: target.id, email: target.email });
+
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email ?? "unknown",
+    action: "user.delete",
+    targetType: "User",
+    targetId: id,
+    metadata: { email: target.email, role: target.role },
+  });
+
+  return NextResponse.json({ ok: true });
 }

@@ -154,6 +154,7 @@ export default async function AdminUsersPage({
                         <UserRowActions
                           userId={user.id}
                           userName={user.name}
+                          userEmail={user.email}
                           role={user.role as "ADMIN" | "STUDENT"}
                           disabled={user.disabledAt !== null}
                         />

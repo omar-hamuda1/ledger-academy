@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ShieldPlus, ShieldMinus, Ban, RotateCcw, KeyRound } from "lucide-react";
+import { ShieldPlus, ShieldMinus, Ban, RotateCcw, KeyRound, Trash2 } from "lucide-react";
 
 type Body =
   | { action: "setRole"; role: "ADMIN" | "STUDENT" }
@@ -12,11 +12,13 @@ type Body =
 export function UserRowActions({
   userId,
   userName,
+  userEmail,
   role,
   disabled,
 }: {
   userId: string;
   userName: string;
+  userEmail: string;
   role: "ADMIN" | "STUDENT";
   disabled: boolean;
 }) {
@@ -75,6 +77,31 @@ export function UserRowActions({
       window.alert(
         `تم تعيين كلمة مرور جديدة لـ «${userName}»:\n\n${pw}\n\nتم نسخها. أرسلها للمستخدم واطلب منه تغييرها بعد الدخول.`,
       );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteUser() {
+    const typed = window.prompt(
+      `حذف «${userName}» نهائيًا — لا يمكن التراجع. سيُحذف الحساب وكل تسجيلاته وتقدّمه ونتائجه وشهاداته وتقييماته.\n\nللتأكيد اكتب بريده الإلكتروني:\n${userEmail}`,
+      "",
+    );
+    if (typed === null) return; // cancelled
+    if (typed.trim().toLowerCase() !== userEmail.toLowerCase()) {
+      toast.error("البريد الإلكتروني غير مطابق — أُلغِي الحذف.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success(`تم حذف «${userName}» نهائيًا.`);
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? "تعذّر حذف المستخدم.");
+      }
     } finally {
       setBusy(false);
     }
@@ -153,6 +180,18 @@ export function UserRowActions({
           <span className={label}>تعطيل</span>
         </button>
       )}
+
+      <button
+        type="button"
+        disabled={busy}
+        onClick={deleteUser}
+        className={`${btn} hover:border-red-500/50 hover:text-red-400`}
+        title="حذف نهائي"
+        aria-label="حذف نهائي"
+      >
+        <Trash2 size={13} />
+        <span className={label}>حذف نهائي</span>
+      </button>
     </div>
   );
 }
