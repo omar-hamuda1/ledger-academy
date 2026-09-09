@@ -11,6 +11,7 @@ const PAGE_SIZE = 30;
 const ACTION_LABELS: Record<string, string> = {
   "course.create": "إنشاء كورس",
   "course.update": "تعديل كورس",
+  "course.delete": "حذف كورس نهائيًا",
   "lesson.create": "إنشاء درس",
   "lesson.update": "تعديل درس",
   "lesson.delete": "حذف درس",

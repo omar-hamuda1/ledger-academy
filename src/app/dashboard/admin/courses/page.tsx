@@ -3,6 +3,7 @@ import { requireScopePage } from "@/lib/require-admin";
 import { GraduationCap, PlusCircle, Pencil, BarChart3 } from "lucide-react";
 import { db } from "@/lib/db";
 import { EditCoursePriceForm } from "@/components/admin/EditCoursePriceForm";
+import { DeleteCourseButton } from "@/components/admin/DeleteCourseButton";
 import { Pagination } from "@/components/admin/Pagination";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +76,12 @@ export default async function AdminCoursesPage({
                   >
                     <BarChart3 size={14} />
                   </Link>
+                  <DeleteCourseButton
+                    courseId={course.id}
+                    courseTitle={course.title}
+                    courseSlug={course.slug}
+                    enrollments={course._count.enrollments}
+                  />
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
                   {course._count.enrollments} طالب مسجّل

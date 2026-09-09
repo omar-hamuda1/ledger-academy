@@ -15,6 +15,14 @@ vi.mock("next/server", async (importOriginal) => {
   return { ...actual, after: (cb: () => unknown) => Promise.resolve(cb()).catch(() => {}) };
 });
 
+// Same reason: `revalidatePath` / `revalidateTag` need a static-generation
+// store that only exists inside a real request. No-op them so a route that
+// busts ISR caches (e.g. course create/update/delete) is testable.
+vi.mock("next/cache", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/cache")>();
+  return { ...actual, revalidatePath: () => {}, revalidateTag: () => {} };
+});
+
 if (!process.env.DATABASE_URL?.includes("ep-summer-grass")) {
   throw new Error(
     "Tests must run against the Neon 'test' branch (.env.test) — refusing to run against an unexpected DATABASE_URL to avoid touching real data."
