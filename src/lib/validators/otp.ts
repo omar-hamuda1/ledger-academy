@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { displayNameError, normalizeName } from "./name";
+import { phoneError, normalizePhone } from "./phone";
 
 export const sendOtpSchema = z.object({
   email: z.email(),
@@ -24,6 +25,16 @@ export const registerSchema = z.object({
     .transform(normalizeName),
   email: z.email(),
   password: z.string().min(8).max(72),
+  // Required at signup (Egyptian mobile). Stored normalized.
+  phone: z
+    .string()
+    .min(1)
+    .max(30)
+    .superRefine((v, ctx) => {
+      const err = phoneError(v);
+      if (err) ctx.addIssue({ code: "custom", message: err });
+    })
+    .transform(normalizePhone),
   // Students are minors — a guardian consent (or "student is 18+") checkbox is
   // required. Must be literally true; false/missing fails validation → 400.
   guardianConsent: z.literal(true),

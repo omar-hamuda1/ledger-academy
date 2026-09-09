@@ -8,7 +8,11 @@ import { UserPlus, ShieldCheck } from "lucide-react";
 import { AuthLayout, AuthFormCard, AuthError, OtpCodeField } from "@/components/auth/AuthLayout";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { displayNameError } from "@/lib/validators/name";
+import { phoneError } from "@/lib/validators/phone";
 import { useT } from "@/i18n/LocaleProvider";
+
+const PHOTO_MAX = 3 * 1024 * 1024;
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,13 +20,35 @@ export default function RegisterPage() {
   const [step, setStep] = useState<"info" | "verify">("info");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [guardianName, setGuardianName] = useState("");
   const [guardianContact, setGuardianContact] = useState("");
   const [consent, setConsent] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function pickPhoto(file: File | null) {
+    setError(null);
+    if (!file) {
+      setPhoto(null);
+      setPhotoPreview(null);
+      return;
+    }
+    if (!PHOTO_TYPES.includes(file.type)) {
+      setError("الصيغة غير مدعومة. استخدم صورة JPG أو PNG أو WebP.");
+      return;
+    }
+    if (file.size > PHOTO_MAX) {
+      setError("حجم الصورة يجب أن يكون أقل من 3 ميجابايت.");
+      return;
+    }
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -31,6 +57,11 @@ export default function RegisterPage() {
     const nameErr = displayNameError(name);
     if (nameErr) {
       setError(nameErr);
+      return;
+    }
+    const phoneErr = phoneError(phone);
+    if (phoneErr) {
+      setError(phoneErr);
       return;
     }
     if (!consent) {
@@ -81,6 +112,7 @@ export default function RegisterPage() {
       body: JSON.stringify({
         name,
         email,
+        phone,
         password,
         guardianConsent: consent,
         guardianName: guardianName.trim() || undefined,
@@ -106,6 +138,14 @@ export default function RegisterPage() {
       // Account exists but auto-login failed for some reason — fall back to the login page.
       router.push("/login");
       return;
+    }
+
+    // Optional profile photo — best-effort now that we're authenticated; if it
+    // fails the student can add it later on their profile.
+    if (photo) {
+      const fd = new FormData();
+      fd.append("image", photo);
+      await fetch("/api/account/avatar", { method: "POST", body: fd }).catch(() => {});
     }
 
     const session = await getSession();
@@ -153,6 +193,20 @@ export default function RegisterPage() {
           </div>
 
           <div>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("auth.register.phone")}</label>
+            <input
+              type="tel"
+              inputMode="tel"
+              dir="ltr"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-right text-white placeholder:text-slate-500 focus:border-gold-400 focus:outline-none"
+              placeholder={t("auth.register.phonePlaceholder")}
+            />
+          </div>
+
+          <div>
             <label className="mb-1.5 block text-sm text-slate-300">{t("common.password")}</label>
             <PasswordInput
               value={password}
@@ -162,6 +216,43 @@ export default function RegisterPage() {
               ariaLabel={t("common.password")}
               placeholder={t("auth.register.passwordPlaceholder")}
             />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm text-slate-300">{t("auth.register.photo")}</label>
+            <div className="flex items-center gap-3">
+              {photoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoPreview}
+                  alt=""
+                  className="h-12 w-12 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold-400/10 text-sm font-bold text-gold-400">
+                  {name.trim().slice(0, 1).toUpperCase() || "؟"}
+                </span>
+              )}
+              <label className="cursor-pointer rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 transition hover:border-gold-400/40 hover:text-gold-400">
+                {t("auth.register.photoChoose")}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => pickPhoto(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              {photo && (
+                <button
+                  type="button"
+                  onClick={() => pickPhoto(null)}
+                  className="text-xs text-slate-400 hover:text-red-400"
+                >
+                  {t("auth.register.photoRemove")}
+                </button>
+              )}
+            </div>
+            <p className="mt-1 text-[11px] text-slate-500">{t("auth.register.photoHint")}</p>
           </div>
 
           <div className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.02] p-3 sm:grid-cols-2">

@@ -17,7 +17,16 @@ export function paymentProofPrefix(userId: string): string {
   return `proofs/${userId}/`;
 }
 
+/** Optional profile photos live in the same bucket under this prefix. */
+export function avatarPrefix(userId: string): string {
+  return `avatars/${userId}/`;
+}
+
 export const paymentProofStore =
   process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ENDPOINT_URL_S3
     ? new Files({ adapter: neon({ bucket: PAYMENT_PROOF_BUCKET }) })
     : null;
+
+// Avatars reuse the same private bucket + client (different key prefix), so
+// there's no extra provisioning. Served via short-lived presigned URLs.
+export const objectStore = paymentProofStore;

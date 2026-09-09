@@ -24,13 +24,13 @@ export async function POST(req: Request) {
     const error =
       field === "guardianConsent"
         ? "يجب إقرار موافقة ولي الأمر للمتابعة."
-        : field === "name"
-          ? issue?.message || "أدخل اسمًا صحيحًا."
+        : field === "name" || field === "phone"
+          ? issue?.message || "بيانات غير صالحة."
           : "بيانات غير صالحة.";
     return NextResponse.json({ error }, { status: 400 });
   }
 
-  const { name, email, password, guardianName, guardianContact } = parsed.data;
+  const { name, email, password, phone, guardianName, guardianContact } = parsed.data;
 
   const verifiedOtp = await db.otpCode.findFirst({
     where: {
@@ -63,6 +63,7 @@ export async function POST(req: Request) {
       name,
       email,
       passwordHash,
+      phone,
       guardianConsentAt: new Date(),
       guardianName: guardianName || null,
       guardianContact: guardianContact || null,

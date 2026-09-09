@@ -48,4 +48,12 @@ describe("PATCH /api/account", () => {
     expect((await res.json()).user.name).toBe("محمد حسين");
     expect((await db.user.findUnique({ where: { id: user.id } }))!.name).toBe("محمد حسين");
   });
+
+  it("updates and normalizes the phone; rejects a bad one and an empty body", async () => {
+    expect((await call({})).status).toBe(400);
+    expect((await call({ phone: "999" })).status).toBe(400);
+    const res = await call({ phone: "٠١٠ ٢٢٢ ٣٣٣٣٣" });
+    expect(res.status).toBe(200);
+    expect((await res.json()).user.phone).toBe("01022233333");
+  });
 });

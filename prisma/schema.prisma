@@ -32,6 +32,14 @@ model User {
   guardianName      String?
   guardianContact   String?
 
+  // Student contact phone — required at signup (Egyptian mobile), editable on
+  // the profile. Nullable: pre-2026-09-09 accounts and admin-script accounts
+  // have none. `avatarKey` is the object-storage key of an optional profile
+  // photo (avatars/<userId>/… in the payment-proofs bucket), served via a
+  // short-lived presigned URL; null = initials avatar.
+  phone      String?
+  avatarKey  String?
+
   enrollments           Enrollment[]
   progress              LessonProgress[]
   quizAttempts          QuizAttempt[]

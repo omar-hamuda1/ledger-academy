@@ -44,7 +44,12 @@ describe("POST /api/register", () => {
       }),
     );
 
-  const base = (email: string) => ({ name: "طالب", email, password: "password123" });
+  const base = (email: string) => ({
+    name: "طالب",
+    email,
+    password: "password123",
+    phone: "01012345678",
+  });
 
   it("rejects a signup with no guardian consent (400)", async () => {
     const email = await seedVerifiedOtp();
@@ -89,20 +94,28 @@ describe("POST /api/register", () => {
   it("rejects a junk name (digits / link / too short) but keeps the guardian check separate", async () => {
     for (const name of ["Ahmed123", "visit www.spam.com", "x"]) {
       const email = await seedVerifiedOtp();
-      const res = await call({ name, email, password: "password123", guardianConsent: true });
+      const res = await call({ ...base(email), name, guardianConsent: true });
       expect(res.status).toBe(400);
       expect(await db.user.findUnique({ where: { email } })).toBeNull();
     }
   });
 
+  it("requires a valid Egyptian phone (400) and stores it normalized", async () => {
+    const bad = await seedVerifiedOtp();
+    expect((await call({ ...base(bad), phone: "12345", guardianConsent: true })).status).toBe(400);
+    expect(
+      (await call({ name: "طالب", email: bad, password: "password123", guardianConsent: true })).status,
+    ).toBe(400); // missing phone
+
+    const ok = await seedVerifiedOtp();
+    const res = await call({ ...base(ok), phone: "٠١٠ ١٢٣٤ ٥٦٧٨", guardianConsent: true });
+    expect(res.status).toBe(201);
+    expect((await db.user.findUnique({ where: { email: ok } }))!.phone).toBe("01012345678");
+  });
+
   it("normalizes a valid name (trim + collapse spaces)", async () => {
     const email = await seedVerifiedOtp();
-    const res = await call({
-      name: "  محمد   حسين  ",
-      email,
-      password: "password123",
-      guardianConsent: true,
-    });
+    const res = await call({ ...base(email), name: "  محمد   حسين  ", guardianConsent: true });
     expect(res.status).toBe(201);
     expect((await db.user.findUnique({ where: { email } }))!.name).toBe("محمد حسين");
   });
