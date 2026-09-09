@@ -8,11 +8,11 @@ import { useT } from "@/i18n/LocaleProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { MessageKey } from "@/i18n/translate";
 
-const navLinks: { href: string; key: MessageKey }[] = [
-  { href: "/#home", key: "nav.home" },
-  { href: "/#courses", key: "nav.courses" },
-  { href: "/#about", key: "nav.about" },
-  { href: "/#contact", key: "nav.contact" },
+const navLinks: { href: string; key: MessageKey; brief: MessageKey }[] = [
+  { href: "/#home", key: "nav.home", brief: "nav.home.brief" },
+  { href: "/#courses", key: "nav.courses", brief: "nav.courses.brief" },
+  { href: "/#about", key: "nav.about", brief: "nav.about.brief" },
+  { href: "/#contact", key: "nav.contact", brief: "nav.contact.brief" },
 ];
 
 export function LedgerHeader() {
@@ -35,9 +35,20 @@ export function LedgerHeader() {
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-slate-300 md:flex">
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="transition hover:text-gold-400">
-              {t(link.key)}
-            </a>
+            <div key={link.href} className="group relative">
+              <a
+                href={link.href}
+                className="inline-flex items-center py-1 transition hover:text-gold-400 group-focus-within:text-gold-400"
+              >
+                {t(link.key)}
+              </a>
+              {/* hover / focus brief */}
+              <div className="pointer-events-none absolute start-0 top-full z-40 w-64 max-w-[calc(100vw-3rem)] translate-y-1 pt-3 opacity-0 transition duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                <div className="rounded-xl border border-white/10 bg-navy-900 p-3.5 text-xs font-normal leading-relaxed text-slate-300 shadow-elevated">
+                  {t(link.brief)}
+                </div>
+              </div>
+            </div>
           ))}
         </nav>
 
@@ -90,9 +101,12 @@ export function LedgerHeader() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="rounded-lg px-2 py-3 transition hover:bg-white/5 hover:text-gold-400"
+              className="rounded-lg px-2 py-2.5 transition hover:bg-white/5 hover:text-gold-400"
             >
               {t(link.key)}
+              <span className="mt-0.5 block text-[11px] font-normal text-slate-500">
+                {t(link.brief)}
+              </span>
             </a>
           ))}
           <div className="px-2 py-3">

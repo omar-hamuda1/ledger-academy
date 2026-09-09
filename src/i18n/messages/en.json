@@ -9,6 +9,10 @@
   "nav.courses": "Courses",
   "nav.about": "About the instructor",
   "nav.contact": "Contact us",
+  "nav.home.brief": "How the platform works and how to start",
+  "nav.courses.brief": "3 secondary-school levels — video lessons, files, and a quiz after each",
+  "nav.about.brief": "Instructor Mohamed Hussien and his approach to business studies",
+  "nav.contact.brief": "Questions about signing up or payment — email or phone us",
 
   "header.greeting": "Hi, {name}",
   "header.openMenu": "Open menu",
