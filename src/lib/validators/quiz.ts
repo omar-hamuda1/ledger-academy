@@ -28,6 +28,9 @@ export const createQuestionSchema = z
 
 export const submitAttemptSchema = z.object({
   answers: z.record(z.string(), z.string()),
+  // Present for a timed quiz — an HMAC start token from the quiz page or
+  // POST /api/quizzes/[id]/start. Ignored for untimed quizzes.
+  startToken: z.string().optional(),
 });
 
 // Bulk-import questions into a lesson's quiz from an uploaded CSV. The CSV

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { submitAttemptSchema } from "@/lib/validators/quiz";
+import { verifyQuizStart, isQuizStartExpired } from "@/lib/quiz-timer";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
@@ -30,6 +31,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   });
   if (!enrollment) {
     return NextResponse.json({ error: "يجب الاشتراك في الكورس أولًا." }, { status: 403 });
+  }
+
+  // Timed quiz: the countdown is enforced here, not just in the client. The
+  // start token is minted server-side when the quiz page loads (and refreshed
+  // by /start on retry); a submission with no token, a tampered token, or one
+  // older than the limit + grace is rejected.
+  if (quiz.timeLimitSec) {
+    const started = parsed.data.startToken
+      ? verifyQuizStart(parsed.data.startToken, quizId, userId)
+      : null;
+    if (!started) {
+      return NextResponse.json(
+        { error: "تعذّر التحقق من وقت بدء الاختبار. حدّث الصفحة وابدأ من جديد." },
+        { status: 400 },
+      );
+    }
+    if (isQuizStartExpired(started.startedAt, quiz.timeLimitSec)) {
+      return NextResponse.json(
+        { error: "انتهى وقت الاختبار. حدّث الصفحة لإعادة المحاولة." },
+        { status: 400 },
+      );
+    }
   }
 
   const { answers } = parsed.data;

@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ArrowRight } from "lucide-react";
 import { QuizTakerForm } from "@/components/course/QuizTakerForm";
+import { signQuizStart } from "@/lib/quiz-timer";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,8 @@ export default async function QuizPage({
     options: question.options as QuestionOption[],
   }));
 
+  const startToken = quiz.timeLimitSec ? signQuizStart(quiz.id, userId) : null;
+
   return (
     <div className="p-6 md:p-8">
       <Link
@@ -57,7 +60,12 @@ export default async function QuizPage({
         اختبار: {quiz.lesson.title}
       </h1>
 
-      <QuizTakerForm quizId={quiz.id} questions={questions} timeLimitSec={quiz.timeLimitSec} />
+      <QuizTakerForm
+        quizId={quiz.id}
+        questions={questions}
+        timeLimitSec={quiz.timeLimitSec}
+        startToken={startToken}
+      />
     </div>
   );
 }

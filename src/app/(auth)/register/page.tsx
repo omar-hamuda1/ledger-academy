@@ -7,6 +7,7 @@ import Link from "next/link";
 import { UserPlus, ShieldCheck } from "lucide-react";
 import { AuthLayout, AuthFormCard, AuthError, OtpCodeField } from "@/components/auth/AuthLayout";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { displayNameError } from "@/lib/validators/name";
 import { useT } from "@/i18n/LocaleProvider";
 
 export default function RegisterPage() {
@@ -27,6 +28,11 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
+    const nameErr = displayNameError(name);
+    if (nameErr) {
+      setError(nameErr);
+      return;
+    }
     if (!consent) {
       setError(t("auth.register.consentRequired"));
       return;

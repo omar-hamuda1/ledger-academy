@@ -19,15 +19,20 @@ export function QuizTakerForm({
   quizId,
   questions,
   timeLimitSec,
+  startToken,
 }: {
   quizId: string;
   questions: Question[];
   timeLimitSec?: number | null;
+  /** HMAC start token for a timed quiz — sent back on submit so the server can
+   *  enforce the countdown. Refreshed from /start on retry. */
+  startToken?: string | null;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timedOut, setTimedOut] = useState(false);
+  const [token, setToken] = useState<string | null>(startToken ?? null);
   const [remaining, setRemaining] = useState<number | null>(timeLimitSec ?? null);
   const [result, setResult] = useState<{
     score: number;
@@ -50,13 +55,14 @@ export function QuizTakerForm({
     const res = await fetch(`/api/quizzes/${quizId}/attempts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers }),
+      body: JSON.stringify({ answers, startToken: token }),
     });
 
     setLoading(false);
 
     if (!res.ok) {
-      setError("تعذّر إرسال الاختبار.");
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "تعذّر إرسال الاختبار.");
       if (auto) setTimedOut(false);
       return;
     }
@@ -82,7 +88,18 @@ export function QuizTakerForm({
     }
   }
 
-  function handleRetry() {
+  async function handleRetry() {
+    // Timed quiz: get a fresh server start token so the countdown restarts from
+    // a server-known instant, not just on the client.
+    if (timeLimitSec) {
+      try {
+        const res = await fetch(`/api/quizzes/${quizId}/start`, { method: "POST" });
+        const data = await res.json().catch(() => null);
+        setToken(res.ok ? (data?.startToken ?? null) : null);
+      } catch {
+        setToken(null);
+      }
+    }
     setResult(null);
     setAnswers({});
     setError(null);
@@ -135,7 +152,7 @@ export function QuizTakerForm({
           </p>
           <button
             type="button"
-            onClick={handleRetry}
+            onClick={() => void handleRetry()}
             className="mx-auto mt-4 flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-sm font-bold text-white transition hover:border-gold-400/40 hover:text-gold-400"
           >
             <RotateCcw size={16} />

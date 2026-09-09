@@ -19,15 +19,15 @@ export async function POST(req: Request) {
   const parsed = registerSchema.safeParse(body);
 
   if (!parsed.success) {
-    const guardianIssue = parsed.error.issues.some((i) => i.path[0] === "guardianConsent");
-    return NextResponse.json(
-      {
-        error: guardianIssue
-          ? "يجب إقرار موافقة ولي الأمر للمتابعة."
-          : "بيانات غير صالحة.",
-      },
-      { status: 400 },
-    );
+    const issue = parsed.error.issues[0];
+    const field = issue?.path[0];
+    const error =
+      field === "guardianConsent"
+        ? "يجب إقرار موافقة ولي الأمر للمتابعة."
+        : field === "name"
+          ? issue?.message || "أدخل اسمًا صحيحًا."
+          : "بيانات غير صالحة.";
+    return NextResponse.json({ error }, { status: 400 });
   }
 
   const { name, email, password, guardianName, guardianContact } = parsed.data;
