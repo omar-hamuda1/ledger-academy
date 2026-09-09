@@ -20,11 +20,13 @@ export function LedgerHeader() {
   const { data: session, status } = useSession();
   const t = useT();
   const dashboardHref = session?.user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/student";
+  // A logged-in student's "home" is their dashboard, not the marketing page.
+  const logoHref = session && session.user.role !== "ADMIN" ? dashboardHref : "/";
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-navy-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href={logoHref} className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold-400 text-navy-950">
             <GraduationCap size={20} />
           </span>

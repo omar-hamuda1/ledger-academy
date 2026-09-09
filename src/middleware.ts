@@ -1,4 +1,5 @@
 import { withAuth } from "next-auth/middleware";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { scopeForPath } from "@/lib/authz";
@@ -128,6 +129,16 @@ const runDashboardAuth = dashboardAuth as unknown as (
 export default async function middleware(req: NextRequest, event: NextFetchEvent) {
   const gated = await stagingGate(req);
   if (gated) return gated;
+
+  // A logged-in student has no use for the marketing home — send them to their
+  // dashboard. Admins pass through so they can preview the public site; `?home`
+  // is an escape hatch for anyone.
+  if (req.nextUrl.pathname === "/" && !req.nextUrl.searchParams.has("home")) {
+    const token = await getToken({ req });
+    if (token && token.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/dashboard/student", req.url));
+    }
+  }
 
   let res: Response | undefined;
   if (req.nextUrl.pathname.startsWith("/dashboard")) {
