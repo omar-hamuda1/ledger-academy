@@ -2,7 +2,7 @@
 
 # Ledger Academy — Project Rules
 
-See `PROJECT_STATE.md` for full architecture/status. Rules below are things that have already caused real bugs or confusion in this project — read before making changes in these areas.
+`docs/PROJECT_STATE.md` is a historical architecture/decision narrative (last full update 2026-09-07); `docs/archive/` holds older snapshots and session handoffs. The rules below are the current source of truth — things that have already caused real bugs or confusion in this project. Read before making changes in these areas.
 
 ## Content & language
 - **Never use the word "مدرس" anywhere in the UI.** Use "محاضر" or "مدرب" instead. This is a hard, non-negotiable rule for this platform.

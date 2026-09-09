@@ -79,4 +79,9 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL }}
-        run: npm test
+        # --retry=2: the suite runs against a shared remote Neon branch, so a
+        # test can flake on a cold-start timeout or transient interference from
+        # another run touching the same branch. Retries absorb that; a real
+        # failure still fails all 3 attempts. (Proper fix = a CI-dedicated Neon
+        # branch separate from local .env.test.)
+        run: npm test -- --retry=2

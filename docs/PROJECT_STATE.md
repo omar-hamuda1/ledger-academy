@@ -1,5 +1,11 @@
 # Project State — Ledger Academy
 
+> **Status of this doc:** a historical narrative log, last comprehensively
+> updated 2026-09-07. For the current authoritative rules and every invariant
+> added since, read `../CLAUDE.md` and `git log`. Older point-in-time snapshots
+> and session handoffs live in `./archive/` (their internal links to
+> `HANDOFF-*.md` / other snapshots now resolve within `./archive/`).
+
 Last updated: 2026-09-07 (Stripe removed → code-based access; payment-proof upload; admin→student broadcast notifications. See section 3.)
 
 > **Deployed to Vercel as private staging: https://ledger-academy-liart.vercel.app** (commit `e6cd486`, region `fra1`, prod Neon branch). All storage + Upstash env vars now set and **verified end-to-end on prod** (payment-proof upload → approve → code+enrollment). The `test` branch schema is in sync and `vitest run` is green (27/27). See **`HANDOFF-2026-09-07.md`** for deployment state, credentials, env-var status, and the prioritized next-steps list — next real work is §4.3 (Brevo email keys, owner action) + §4.4/§4.5.
