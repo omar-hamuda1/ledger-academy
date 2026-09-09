@@ -143,7 +143,24 @@ export default async function AdminUsersPage({
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-400">{user.email}</td>
+                    <td className="px-4 py-3 text-slate-400">
+                      {user.email}
+                      {user.role === "STUDENT" && (
+                        <span className="mt-0.5 block text-[11px]">
+                          {user.guardianConsentAt ? (
+                            <span className="text-emerald-400/80">
+                              ✓ إقرار ولي الأمر
+                              {(user.guardianName || user.guardianContact) &&
+                                ` — ${[user.guardianName, user.guardianContact]
+                                  .filter(Boolean)
+                                  .join(" · ")}`}
+                            </span>
+                          ) : (
+                            <span className="text-amber-400/80">لا يوجد إقرار ولي أمر</span>
+                          )}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-bold ${ROLE_STYLE[user.role] ?? "bg-white/5 text-slate-300"}`}

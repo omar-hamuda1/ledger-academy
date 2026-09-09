@@ -16,6 +16,9 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianContact, setGuardianContact] = useState("");
+  const [consent, setConsent] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,6 +26,12 @@ export default function RegisterPage() {
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!consent) {
+      setError(t("auth.register.consentRequired"));
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/auth/otp/send", {
@@ -63,7 +72,14 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        guardianConsent: consent,
+        guardianName: guardianName.trim() || undefined,
+        guardianContact: guardianContact.trim() || undefined,
+      }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -142,9 +158,51 @@ export default function RegisterPage() {
             />
           </div>
 
+          <div className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.02] p-3 sm:grid-cols-2">
+            <p className="text-xs text-slate-400 sm:col-span-2">
+              {t("auth.register.guardianIntro")}
+            </p>
+            <div>
+              <label className="mb-1.5 block text-sm text-slate-300">
+                {t("auth.register.guardianName")}
+              </label>
+              <input
+                type="text"
+                value={guardianName}
+                onChange={(e) => setGuardianName(e.target.value)}
+                className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-gold-400 focus:outline-none"
+                placeholder={t("auth.register.guardianNamePlaceholder")}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm text-slate-300">
+                {t("auth.register.guardianContact")}
+              </label>
+              <input
+                type="text"
+                inputMode="tel"
+                value={guardianContact}
+                onChange={(e) => setGuardianContact(e.target.value)}
+                className="w-full rounded-lg border border-white/15 bg-navy-950 px-3 py-2.5 text-white placeholder:text-slate-500 focus:border-gold-400 focus:outline-none"
+                placeholder={t("auth.register.guardianContactPlaceholder")}
+              />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-2.5 text-xs text-slate-300">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 accent-gold-400"
+            />
+            <span>{t("auth.register.consentCheckbox")}</span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !consent}
             className="w-full rounded-lg bg-gold-400 py-2.5 font-bold text-navy-950 transition hover:bg-gold-300 disabled:opacity-60"
           >
             {loading ? t("auth.register.sending") : t("auth.register.sendCode")}

@@ -19,10 +19,18 @@ export async function POST(req: Request) {
   const parsed = registerSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
+    const guardianIssue = parsed.error.issues.some((i) => i.path[0] === "guardianConsent");
+    return NextResponse.json(
+      {
+        error: guardianIssue
+          ? "يجب إقرار موافقة ولي الأمر للمتابعة."
+          : "بيانات غير صالحة.",
+      },
+      { status: 400 },
+    );
   }
 
-  const { name, email, password } = parsed.data;
+  const { name, email, password, guardianName, guardianContact } = parsed.data;
 
   const verifiedOtp = await db.otpCode.findFirst({
     where: {
@@ -51,7 +59,14 @@ export async function POST(req: Request) {
   const passwordHash = await bcrypt.hash(password, 12);
 
   const user = await db.user.create({
-    data: { name, email, passwordHash },
+    data: {
+      name,
+      email,
+      passwordHash,
+      guardianConsentAt: new Date(),
+      guardianName: guardianName || null,
+      guardianContact: guardianContact || null,
+    },
     select: { id: true, name: true, email: true },
   });
 

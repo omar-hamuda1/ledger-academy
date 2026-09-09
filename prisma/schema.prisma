@@ -24,6 +24,14 @@ model User {
   superAdmin   Boolean   @default(false) // protected: only another super-admin (or direct DB/CLI) can change this account's role/status/password. Granted only via `npm run admin:super`, never through the API/UI.
   restrictedScopes String[] @default([]) // ADMIN deny-list: dashboard sections this admin is blocked from (keys in src/lib/authz.ts). Empty = full access. Super-admins ignore it. Written only by the super-admin-only `setPermissions` action on PATCH /api/users/[id].
 
+  // Parental/guardian consent captured at signup (students are minors). Set once
+  // by POST /api/register; a required checkbox on the signup form. Null on
+  // accounts created before this was added (2026-09-09) and on admin-script
+  // accounts. Guardian name/contact are optional free text.
+  guardianConsentAt DateTime?
+  guardianName      String?
+  guardianContact   String?
+
   enrollments           Enrollment[]
   progress              LessonProgress[]
   quizAttempts          QuizAttempt[]
