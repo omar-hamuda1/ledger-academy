@@ -1,5 +1,7 @@
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { Pagination } from "@/components/admin/Pagination";
+import { AuditFilters, AUDIT_CATEGORY_LABELS } from "@/components/admin/AuditFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -11,15 +13,50 @@ const ACTION_LABELS: Record<string, string> = {
   "lesson.create": "إنشاء درس",
   "lesson.update": "تعديل درس",
   "lesson.delete": "حذف درس",
+  "lesson.reorder": "إعادة ترتيب الدروس",
   "module.create": "إنشاء وحدة",
   "module.delete": "حذف وحدة",
+  "module.reorder": "إعادة ترتيب الوحدات",
   "question.create": "إضافة سؤال",
   "question.delete": "حذف سؤال",
   "quiz.create": "إنشاء اختبار",
+  "quiz.update": "تعديل اختبار",
   "quiz.delete": "حذف اختبار",
+  "quiz.bulk_import": "رفع أسئلة بالجملة",
   "resource.create": "إضافة مرفق",
   "resource.delete": "حذف مرفق",
   "settings.update": "تحديث الإعدادات العامة",
+  "user.role_change": "تغيير دور مستخدم",
+  "user.password_reset": "إعادة تعيين كلمة مرور",
+  "user.delete": "حذف مستخدم نهائيًا",
+  "notification.broadcast": "إرسال إشعار عام",
+  "code_order.approve": "قبول طلب كود",
+  "code_order.reject": "رفض طلب كود",
+  "prepaid_codes.generate": "توليد أكواد",
+  "prepaid_codes.export": "تصدير أكواد",
+  "prepaid_codes.delete": "حذف أكواد",
+  "review.delete": "حذف تقييم",
+  "review.hide": "إخفاء تقييم",
+  "review.unhide": "إظهار تقييم",
+  "lesson_question.delete": "حذف سؤال درس",
+  "lesson_answer.delete": "حذف إجابة درس",
+  "enrollment.remove": "إلغاء اشتراك",
+};
+
+// category key (from AuditFilters) → the `action` prefixes it covers
+const AUDIT_CATEGORIES: Record<string, string[]> = {
+  course: ["course."],
+  lesson: ["lesson."],
+  module: ["module."],
+  quiz: ["quiz.", "question."],
+  resource: ["resource."],
+  user: ["user."],
+  notification: ["notification."],
+  codes: ["code_order.", "prepaid_codes."],
+  review: ["review."],
+  qa: ["lesson_question.", "lesson_answer."],
+  enrollment: ["enrollment."],
+  settings: ["settings."],
 };
 
 function formatMetadata(metadata: unknown): string {
@@ -31,21 +68,53 @@ function formatMetadata(metadata: unknown): string {
   return entries.map(([key, value]) => `${key}: ${String(value)}`).join(" · ");
 }
 
+/** "2026-09-09" → Date, or undefined if not a valid ISO date string. */
+function parseDay(value: string | undefined, endOfDay = false): Date | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const d = new Date(`${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}`);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 export default async function AdminAuditPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; cat?: string; from?: string; to?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, q, cat, from, to } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+
+  const search = (q ?? "").trim();
+  const catFilter = cat && cat in AUDIT_CATEGORIES ? cat : undefined;
+  const fromDate = parseDay(from);
+  const toDate = parseDay(to, true);
+
+  const and: Prisma.AuditLogWhereInput[] = [];
+  if (search) {
+    and.push({
+      OR: [
+        { actorEmail: { contains: search, mode: "insensitive" } },
+        { action: { contains: search, mode: "insensitive" } },
+        { targetId: { contains: search, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (catFilter) {
+    and.push({ OR: AUDIT_CATEGORIES[catFilter].map((prefix) => ({ action: { startsWith: prefix } })) });
+  }
+  if (fromDate || toDate) {
+    and.push({ createdAt: { ...(fromDate ? { gte: fromDate } : {}), ...(toDate ? { lte: toDate } : {}) } });
+  }
+  const where: Prisma.AuditLogWhereInput = and.length ? { AND: and } : {};
+  const hasFilters = Boolean(search || catFilter || fromDate || toDate);
 
   const [logs, totalCount] = await Promise.all([
     db.auditLog.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    db.auditLog.count(),
+    db.auditLog.count({ where }),
   ]);
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -56,10 +125,26 @@ export default async function AdminAuditPage({
         سجل بكل إجراءات الإدارة (إنشاء، تعديل، حذف) مع تحديد من قام بها ومتى.
       </p>
 
+      <AuditFilters
+        q={search || undefined}
+        cat={catFilter}
+        from={fromDate ? from : undefined}
+        to={toDate ? to : undefined}
+      />
+
+      <p className="mt-3 text-xs text-slate-400">
+        {totalCount.toLocaleString("ar-EG")} {hasFilters ? "نتيجة مطابقة" : "إجراء مسجَّل"}
+        {catFilter && ` · ${AUDIT_CATEGORY_LABELS[catFilter]}`}
+      </p>
+
       {logs.length === 0 ? (
-        <p className="mt-8 text-slate-400">لا يوجد أي نشاط مسجَّل بعد.</p>
+        <div className="mt-4 rounded-card border border-white/10 bg-navy-900/60 p-16 text-center shadow-card">
+          <p className="text-slate-400">
+            {hasFilters ? "لا توجد إجراءات مطابقة لبحثك." : "لا يوجد أي نشاط مسجَّل بعد."}
+          </p>
+        </div>
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-card border border-white/10 bg-navy-900/60 shadow-card">
+        <div className="mt-4 overflow-x-auto rounded-card border border-white/10 bg-navy-900/60 shadow-card">
           <table className="w-full text-right text-sm">
             <thead>
               <tr className="border-b border-white/10 text-slate-400">
@@ -95,7 +180,12 @@ export default async function AdminAuditPage({
         </div>
       )}
 
-      <Pagination currentPage={page} totalPages={totalPages} basePath="/dashboard/admin/audit" />
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        basePath="/dashboard/admin/audit"
+        query={{ q: search || undefined, cat: catFilter, from: fromDate ? from : undefined, to: toDate ? to : undefined }}
+      />
     </div>
   );
 }
